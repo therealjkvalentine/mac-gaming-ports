@@ -1,0 +1,8 @@
+# This repo is docs + scripts ONLY. Never commit the game, prefixes, tokens, or logs.
+*.app/
+logs/
+steamcmd/
+mw5-windows/
+prefix/
+*.log
+.DS_Store
