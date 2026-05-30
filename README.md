@@ -1,55 +1,80 @@
-# Mac Gaming Ports 🎮🍎
+# Mac Gaming Ports
 
-Recipes for running **Windows-only Steam games on Apple Silicon Macs** with **free, open-source
-tooling** — **Sikarugir / Wine 10 + Apple D3DMetal**, no CrossOver license. Each game becomes a
-**self-contained `.app`** that runs **without Steam** and copies between Macs.
+Recipes for running Windows-only Steam games on Apple Silicon Macs with free, open-source tooling.
+Each game becomes a self-contained `.app` that runs without Steam and copies between Macs.
 
-> Built & verified on Apple **M5 Pro / macOS 26 (Tahoe)**, May 2026. Works on M1–M5, macOS 14–27.
-> "Ports" loosely — these are Wine wrappers, not native recompiles, but they run great.
+Built and verified on Apple M5 Pro / macOS 26 (Tahoe), May 2026. Works on M1-M5, macOS 14-27.
+"Ports" loosely: these are Wine wrappers, not native recompiles, but they run well.
 
-## 🎯 Games
+## Games
+
+Working:
 
 | Game | Steam AppID | Status | Guide |
 |---|---|---|---|
-| **MechWarrior 5: Mercenaries** | `784080` | ✅ Playable — D3DMetal, controller, no Steam | [games/mechwarrior-5-mercenaries](games/mechwarrior-5-mercenaries/) |
+| MechWarrior 5: Mercenaries | 784080 | Playable - D3DMetal, controller, no Steam | [games/mechwarrior-5-mercenaries](games/mechwarrior-5-mercenaries/) |
 
-*More to come. PRs welcome — see [Adding a game](#-add-a-game).*
+Candidates (want a portable Mac version; not built yet):
 
-## ⚙️ The method in one breath
-Wrap the game in a **Sikarugir Wine-10 `.app`**, download it with **native macOS SteamCMD** (the
-Steam client *inside* Wine stalls on downloads), and **launch through the Sikarugir launcher** so
-**D3DMetal** (DirectX→Metal) engages. The full walkthrough and the seven gotchas that make every
-obvious shortcut fail are in **[AGENTS.md](AGENTS.md)**.
+| Game | Likely outcome with this method | Notes |
+|---|---|---|
+| Bloodstained: Ritual of the Night | High | Unreal Engine 4 / DX11 / single-player - essentially identical to MW5 |
+| BattleTech (HBS) | High | Unity / DX11 / single-player; the old native Mac build is broken on Apple Silicon, so the Wine route is the fix |
+| SpiderHeck | Likely | Unity; check for a working native Mac build first - it may not need Wine at all |
+| Need for Speed: Most Wanted | Depends on version | 2005 (DX9, delisted from Steam) vs 2012 (DX11 + EA app dependency) - the version needs pinning down |
 
-## 🚀 Quick start
-Each `games/<game>/` folder has a README with that game's exact launch command and tuned settings.
-The finished `.app` then just runs:
+## The stack we settled on, and why
+
+- **Sikarugir** (free, open-source; the maintained successor to Kegworks/Wineskin) - produces a self-contained, relocatable `.app`.
+- **Wine 10** (Sikarugir's engine) - Apple's Game Porting Toolkit ships Wine 7.7, which is too old for the current Steam client.
+- **Apple D3DMetal** (DirectX-to-Metal, free, bundled in the engine) - best DX11/12 performance on Apple Silicon; the open-source WineD3D/Vulkan path failed the game's GPU feature-level check.
+- **Native macOS SteamCMD** - downloads the game reliably; the Steam client running inside Wine stalls on downloads.
+- **Rosetta 2** - translates the x86-64 game and Wine to ARM.
+
+## What we learned
+
+- The in-Wine Steam client is the problem child: its downloader stalls after about 2 GB, and its Play button launches the game without D3DMetal. Download with native SteamCMD; launch via the wrapper.
+- D3DMetal only engages when launched through the Sikarugir launcher (an Info.plist flag) - not from a raw `wine` call, even with the right environment variables.
+- The finished game needs no Steam running at all; it runs standalone.
+- The game files are the only real bulk (about 95 GB for MW5); the wrapper itself is roughly 1 GB and fully portable.
+- Full detail - every gotcha, controllers, performance tuning - is in [AGENTS.md](AGENTS.md).
+
+## Quick start
+
+Each `games/<game>/` folder has that game's exact launch command and tuned settings. A finished
+wrapper just runs:
+
 ```sh
 open ~/Applications/Sikarugir/<Game>.app
 ```
 
-## ➕ Add a game
-See **[AGENTS.md → Adding a game](AGENTS.md#-adding-a-game)**. In short: confirm it has **no
-kernel-level anti-cheat**, download it via SteamCMD, point a wrapper at its `.exe` with `D3DMETAL=1`,
-document it in a new `games/<slug>/` folder, and add a row to the table above. Check compatibility
-first on [AppleGamingWiki](https://www.applegamingwiki.com) / [ProtonDB](https://www.protondb.com).
+## Add a game
 
-## ✅ Requirements
-Apple Silicon Mac · macOS 14–27 · Rosetta 2 · free space for the game. (Homebrew only to *build* a
-wrapper; running a prebuilt `.app` needs nothing but Rosetta.)
+See [AGENTS.md, "Adding a game"](AGENTS.md#adding-a-game). In short: confirm it has no kernel-level
+anti-cheat, download it with SteamCMD, point a wrapper at its `.exe` with `D3DMETAL=1`, document it
+under `games/<slug>/`, and add a row above. Check compatibility first on
+[AppleGamingWiki](https://www.applegamingwiki.com) or [ProtonDB](https://www.protondb.com).
 
-## 🔧 Repo layout
+## Requirements
+
+Apple Silicon Mac, macOS 14-27, Rosetta 2, free space for the game. Homebrew only to build a wrapper;
+running a prebuilt `.app` needs nothing but Rosetta.
+
+## Repo layout
+
 ```
-AGENTS.md                     # the general method + gotchas + how to add a game
-scripts/setup-on-new-mac.sh   # one-time setup for a prebuilt .app on a fresh Mac
-games/<slug>/                 # one folder per game: README + play/launch/download scripts
+AGENTS.md                     the general method, gotchas, controllers, tuning, adding a game
+scripts/setup-on-new-mac.sh   one-time setup for a prebuilt .app on a fresh Mac
+games/<slug>/                 one folder per game: README plus play/launch/download scripts
 ```
 
-## 🤝 Sharing & references
-Compatibility + community: [AppleGamingWiki](https://www.applegamingwiki.com) ·
-[ProtonDB](https://www.protondb.com) · [CodeWeavers DB](https://www.codeweavers.com/compatibility) ·
-[WINE for Mac](https://wineformac.org) · r/macgaming.
+## Sharing and references
+
+[AppleGamingWiki](https://www.applegamingwiki.com), [ProtonDB](https://www.protondb.com),
+[CodeWeavers compatibility database](https://www.codeweavers.com/compatibility),
+[WINE for Mac](https://wineformac.org), r/macgaming.
 
 ## License
-[MIT](LICENSE). Contains **no game files** — only setup recipes and scripts. Game names and Steam are
+
+[MIT](LICENSE). Contains no game files - only setup recipes and scripts. Game names and Steam are
 trademarks of their respective owners.
