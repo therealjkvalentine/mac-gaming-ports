@@ -8,11 +8,17 @@ Built and verified on Apple M5 Pro / macOS 26 (Tahoe), May 2026. Works on M1-M5,
 
 ## Games
 
-Working:
+Working on the free stack (Sikarugir/Wine + D3DMetal, no Steam at runtime):
 
 | Game | Steam AppID | Status | Guide |
 |---|---|---|---|
 | MechWarrior 5: Mercenaries | 784080 | Playable - D3DMetal, controller, no Steam | [games/mechwarrior-5-mercenaries](games/mechwarrior-5-mercenaries/) |
+
+Working, but requires CrossOver (the EA-DRM exception the free stack can't run):
+
+| Game | Steam AppID | Status | Guide |
+|---|---|---|---|
+| Need for Speed: Most Wanted (2012) | 1262560 | Playable via CrossOver + EA app; not free-stack | [games/need-for-speed-most-wanted-2012](games/need-for-speed-most-wanted-2012/) |
 
 Candidates (want a portable Mac version; not built yet):
 
@@ -21,7 +27,6 @@ Candidates (want a portable Mac version; not built yet):
 | Bloodstained: Ritual of the Night | High | Unreal Engine 4 / DX11 / single-player - essentially identical to MW5 |
 | BattleTech (HBS) | High | Unity / DX11 / single-player; the old native Mac build is broken on Apple Silicon, so the Wine route is the fix |
 | SpiderHeck | Likely | Unity; check for a working native Mac build first - it may not need Wine at all |
-| Need for Speed: Most Wanted | Depends on version | 2005 (DX9, delisted from Steam) vs 2012 (DX11 + EA app dependency) - the version needs pinning down |
 
 ## The stack we settled on, and why
 
