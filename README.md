@@ -23,11 +23,11 @@ Candidates (want a portable Mac version; not built yet):
 | Bloodstained: Ritual of the Night | High | Unreal Engine 4 / DX11 / single-player - essentially identical to MW5 |
 | BattleTech (HBS) | High | Unity / DX11 / single-player; the old native Mac build is broken on Apple Silicon, so the Wine route is the fix |
 
-Tried, then fixed - MechWarrior 4 now boots via a runtime memory patch + windowed mode (see its guide). Original analysis:
+Dead end on Apple Silicon (fully diagnosed - see the guide):
 
 | Game | Why | Guide |
 |---|---|---|
-| MechWarrior 4: Mercenaries | 32-bit DirectX 8 (free MekTek release); crashes at startup in CPU detection (`GetProcessorDetails`) under Rosetta+wow64 - not fixable by Wine config | [games/mechwarrior-4-mercenaries](games/mechwarrior-4-mercenaries/) |
+| MechWarrior 4: Mercenaries | 32-bit DX8 (free MekTek release). Its PECompact/SafeDisc-style protection programs x86 LDT segments (`NtSetLdtEntries`), which Rosetta doesn't emulate - architectural, not a config fix. Runs on real x86; a QEMU x86 VM clears the LDT but isn't practically playable (heap-corruption wall + software rendering). | [games/mechwarrior-4-mercenaries](games/mechwarrior-4-mercenaries/) |
 
 ## The stack we settled on, and why
 
