@@ -1,52 +1,54 @@
 # Need for Speed: Most Wanted (2012) - Apple Silicon
 
-Status: Playable, but via **CrossOver** - NOT the free Sikarugir stack. Verified on Apple M5 Pro /
-macOS 26 (Tahoe), May 2026.
+Status: Playable on the **free Sikarugir stack** (Wine 10 + D3DMetal), no CrossOver. Verified on
+Apple M5 Pro / macOS 26 (Tahoe), June 2026.
 Steam AppID: 1262560 (the 2012 Criterion game; owned on Steam). Engine: Criterion / DX11.
-DRM: Steamworks + EA (Origin) - the EA app is required at every launch.
+DRM: Steamworks + EA (Origin AccessDRM). The EA servers are shut down, which - counterintuitively - is
+what makes the free stack work (see below).
 
-> This is the one title in this repo the free stack cannot run, and it is documented here precisely so
-> that limit is on record. For the general free method, see [../../AGENTS.md](../../AGENTS.md). This
-> entry is the CrossOver exception.
+> Earlier in this repo's history this title was the "CrossOver exception." That turned out to be
+> unnecessary. It runs on the same free wrapper as MW5 and SpiderHeck, with two cosmetic caveats. The
+> CrossOver bottle was only ever needed for the **one-time EA activation**, not to play.
 
-## Why not the free stack
-NFS MW 2012's DRM checks for EA's launcher (the EA app) at launch. The EA app is a heavy Electron app
-that runs under CrossOver but not under free Wine (Whisky's EA-app guide is archived/dead, and the
-EA app's CEF UI does not come up on the free engines). The only way to run the game launcher-free is a
-DRM crack, which this project does not do. So this title requires **CrossOver** (free 14-day trial, or
-licensed).
+## How it runs (free stack)
+- The wrapper is a Sikarugir/Wine 10 + D3DMetal `.app`, cloned from the SpiderHeck wrapper (same engine
+  family) via APFS copy-on-write, then pointed at `NFS13.exe`. See [../../AGENTS.md](../../AGENTS.md).
+- The game files (`Need for Speed(TM) Most Wanted`, exe `NFS13.exe`) were obtained from a one-time
+  legitimate install of the owned Steam copy, then copied into the wrapper. No Steam client, no EA app,
+  no Goldberg, no crack inside the finished wrapper - it is self-contained.
+- Launch: `open ~/Applications/Sikarugir/NeedForSpeedMostWanted.app`.
 
-## How it runs (CrossOver)
-- Install CrossOver: `brew install --cask crossover` (runs on the free trial). v26.1 = Wine 11 + D3DMetal.
-- One CrossOver bottle ("EA App") holds BOTH the **EA app** (installed + signed in) and the **Windows
-  Steam client**, installed into the same bottle so NFS sees both halves of its DRM.
-- Install NFS from the Steam library inside the bottle (game dir `Need for Speed(TM) Most Wanted`,
-  exe `NFS13.exe`). First launch performs the one-time EA activation that links the Steam copy to the
-  EA account.
-- Launch via the bottle's Steam Play button.
+## The two caveats (both cosmetic, neither blocks play)
+1. **"You must be signed in to the EA servers" prompt at startup.** The EA Autolog servers are dead, so
+   the game's AccessDRM online check times out and the game shows a one-time press-to-continue dialog,
+   then plays fully offline. There is no known clean flag/registry key to suppress it (the only "fixes"
+   online are crack exes, which this project does not use). One keypress per launch.
+2. **~1.8-minute opening movie plays every boot.** It is `UI/MOVIES/1307304.VP6`. It is NOT save-gated
+   (a completed save does not skip it) and the game hard-requires the file to exist - deleting it or
+   swapping in a shorter clip causes a black-screen hang, because the player waits for that exact
+   stream. ThirteenAG's `SkipIntro=1` (installed) does not catch this particular movie. Left in place.
 
-## Gotchas
-- **Native macOS Steam conflict (the big one):** the native Steam fights the bottle's Steam for the same
-  network ports and stalls downloads/launches. It auto-respawns via the
-  `~/Library/LaunchAgents/com.valvesoftware.steamclean.plist` LaunchAgent. **Quit native Steam (or
-  disable its auto-start: native Steam > Settings > Interface > uncheck "Run Steam when my computer
-  starts") before playing.** This same conflict likely caused the MechWarrior 5 in-Wine download stalls.
-- **Performance:** drop Shadow + Effects detail first (heaviest). A 2012 game has plenty of headroom on
-  M-series.
-- **Overlay / audio fixes:** disable the EA in-game (Origin) overlay in the EA app's Settings >
-  Application; turn off audio reverberation in the game's audio options.
-- **Reducing overhead:** once the copy is linked to EA, it may be installable via the EA app alone
-  (dropping the Steam client and the port-conflict), but the EA app itself is still required at launch.
-  There is no fully launcher-free legitimate configuration.
+## Why this works without CrossOver (the key insight)
+NFS MW 2012's EA DRM is "AccessDRM": at launch it tries to validate a license against EA's servers. We
+originally assumed that required the EA app (which only runs under CrossOver, not free Wine). But with
+the servers permanently offline, the check fails *open* - it cannot reach a server to deny the license,
+so after the timeout prompt it proceeds. The EA app was only ever needed for the **initial activation**
+handshake; once that's irrelevant (dead servers), the free wrapper runs the game directly. This is the
+opposite of the usual "always-online DRM bricks the game" outcome - here the shutdown is what frees it.
 
-## Multiplayer, Goldberg, and nfsmwo.com
-- **Goldberg does not help here.** NFS MW 2012's DRM is EA/Origin, not Steamworks; Goldberg only stubs
-  Steam, so it cannot make this title offline or portable. (Goldberg works for our Steamworks titles -
-  MW5, SpiderHeck - but not EA DRM.)
-- **nfsmwo.com is a different game.** "Most Wanted Online" restores multiplayer for **NFS: Most Wanted
-  2005** (`speed.exe`), not this 2012 Criterion game (`NFS13.exe`). The 2012 game's online (EA Autolog)
-  is shut down, has no LAN, and has no revival.
-- **For NFS LAN on a plane, the 2005 Most Wanted is the title** - it has true LAN via the
-  [NFSLAN tool](https://github.com/xan1242/NFSLAN) (`server.dll`) plus the [nfsmwo.com](https://nfsmwo.com/)
-  fan online. A different, older, 32-bit game (same Apple-Silicon caveat as MW4), but genuinely
-  LAN-capable - unlike this 2012 version.
+## Build specifics
+- Wrapper `Info.plist`: `Program Name and Path` = `...\Need for Speed(TM) Most Wanted\NFS13.exe`,
+  `D3DMETAL` = 1, `Program Flags` empty. Icon set from the game's own icon.
+- ThirteenAG Widescreen Fix (`dinput8.dll` + `scripts/`) is installed, but with the aspect-ratio
+  options **off by default** (`FixHUD`/`FixFOV`/`FMVWidescreenMode`/`AutoFit* = 0`) so the game keeps
+  its stock presentation on a laptop screen. Wine DLL override `dinput8 = native,builtin` is set so the
+  ASI loader loads. (The fix is kept mainly as the SkipIntro vehicle and for optional FOV later.)
+- Save location: `~/Documents/Criterion Games/Need For Speed(TM) Most Wanted/` (CrossOver/Wine map the
+  Windows Documents to the native `~/Documents`, so the wrapper and the Mac share one save folder).
+
+## Performance
+Drop Shadow + Effects detail first (heaviest). A 2012 game has plenty of headroom on M-series.
+
+## Multiplayer note
+NFS MW 2012's online (EA Autolog) is shut down with no LAN and no revival. nfsmwo.com restores
+multiplayer for the **2005** Most Wanted (`speed.exe`), a different, older game - not this one.

@@ -14,12 +14,7 @@ Working on the free stack (Sikarugir/Wine + D3DMetal; free, open-source tooling 
 |---|---|---|---|
 | MechWarrior 5: Mercenaries | 784080 | Playable - D3DMetal, controller, all DLC, fully offline via Goldberg, cheats + LAN prepped | [games/mechwarrior-5-mercenaries](games/mechwarrior-5-mercenaries/) |
 | SpiderHeck | 1329500 | Playable - D3DMetal, controller, 4-player couch co-op, fully offline via Goldberg | [games/spiderheck](games/spiderheck/) |
-
-Working, but requires CrossOver (the EA-DRM exception the free stack can't run):
-
-| Game | Steam AppID | Status | Guide |
-|---|---|---|---|
-| Need for Speed: Most Wanted (2012) | 1262560 | Playable via CrossOver + EA app; not free-stack | [games/need-for-speed-most-wanted-2012](games/need-for-speed-most-wanted-2012/) |
+| Need for Speed: Most Wanted (2012) | 1262560 | Playable - D3DMetal, self-contained, no CrossOver; one-time EA prompt per launch (servers dead) | [games/need-for-speed-most-wanted-2012](games/need-for-speed-most-wanted-2012/) |
 
 Candidates (want a portable Mac version; not built yet):
 
@@ -46,7 +41,8 @@ Tried, then fixed - MechWarrior 4 now boots via a runtime memory patch + windowe
 
 - The in-Wine Steam client is the problem child: its downloader stalls after about 2 GB, and its Play button launches the game without D3DMetal. Download with native SteamCMD; launch via the wrapper.
 - D3DMetal only engages when launched through the Sikarugir launcher (an Info.plist flag) - not from a raw `wine` call, even with the right environment variables.
-- Whether a finished game needs Steam running depends on the game - but for a game **you own**, the open-source **Goldberg Steamworks emulator** drops that requirement entirely. MW5 (DLC, offline) and SpiderHeck (no more "Loading..." hang) now run with no Steam at all, and Goldberg can also do offline LAN co-op among owned copies. See [AGENTS.md](AGENTS.md#going-fully-steam-free-goldberg-for-owned-games). It only stubs Steamworks - EA/Origin DRM (NFS) still needs CrossOver.
+- Whether a finished game needs Steam running depends on the game - but for a game **you own**, the open-source **Goldberg Steamworks emulator** drops that requirement entirely. MW5 (DLC, offline) and SpiderHeck (no more "Loading..." hang) now run with no Steam at all, and Goldberg can also do offline LAN co-op among owned copies. See [AGENTS.md](AGENTS.md#going-fully-steam-free-goldberg-for-owned-games).
+- EA/Origin DRM does **not** necessarily need CrossOver. We first ran NFS Most Wanted (2012) via a CrossOver bottle, but found the finished game runs on the plain free wrapper: with EA's Autolog servers shut down, the online license check fails open (one-time "press to continue" prompt, then it plays). CrossOver was only needed for the original one-time activation, not to play. The repo's CrossOver dependency has since been removed.
 - The game files are the only real bulk (about 95 GB for MW5, ~1.5 GB for SpiderHeck); the wrapper engine itself is roughly 3 GB and fully portable.
 - A wrapper can be cloned for another game on the same engine (APFS copy-on-write is instant and near-free) instead of rebuilt - SpiderHeck reused MW5's.
 - Full detail - every gotcha, controllers, performance tuning - is in [AGENTS.md](AGENTS.md).
