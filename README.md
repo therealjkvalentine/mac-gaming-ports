@@ -8,11 +8,12 @@ Built and verified on Apple M5 Pro / macOS 26 (Tahoe), May 2026. Works on M1-M5,
 
 ## Games
 
-Working on the free stack (Sikarugir/Wine + D3DMetal, no Steam at runtime):
+Working on the free stack (Sikarugir/Wine + D3DMetal; free, open-source tooling only):
 
 | Game | Steam AppID | Status | Guide |
 |---|---|---|---|
-| MechWarrior 5: Mercenaries | 784080 | Playable - D3DMetal, controller, no Steam | [games/mechwarrior-5-mercenaries](games/mechwarrior-5-mercenaries/) |
+| MechWarrior 5: Mercenaries | 784080 | Playable - D3DMetal, controller, no Steam at runtime | [games/mechwarrior-5-mercenaries](games/mechwarrior-5-mercenaries/) |
+| SpiderHeck | 1329500 | Playable - D3DMetal, controller, 4-player couch co-op (needs in-wrapper Steam running) | [games/spiderheck](games/spiderheck/) |
 
 Working, but requires CrossOver (the EA-DRM exception the free stack can't run):
 
@@ -26,7 +27,6 @@ Candidates (want a portable Mac version; not built yet):
 |---|---|---|
 | Bloodstained: Ritual of the Night | High | Unreal Engine 4 / DX11 / single-player - essentially identical to MW5 |
 | BattleTech (HBS) | High | Unity / DX11 / single-player; the old native Mac build is broken on Apple Silicon, so the Wine route is the fix |
-| SpiderHeck | Likely | Unity; check for a working native Mac build first - it may not need Wine at all |
 
 ## The stack we settled on, and why
 
@@ -40,8 +40,9 @@ Candidates (want a portable Mac version; not built yet):
 
 - The in-Wine Steam client is the problem child: its downloader stalls after about 2 GB, and its Play button launches the game without D3DMetal. Download with native SteamCMD; launch via the wrapper.
 - D3DMetal only engages when launched through the Sikarugir launcher (an Info.plist flag) - not from a raw `wine` call, even with the right environment variables.
-- The finished game needs no Steam running at all; it runs standalone.
-- The game files are the only real bulk (about 95 GB for MW5); the wrapper itself is roughly 1 GB and fully portable.
+- Whether the finished game needs Steam running depends on the game: MW5 runs fully standalone, but SpiderHeck's Steamworks load checks require a logged-in in-wrapper Steam in the same Wine session (it hangs on "Loading..." otherwise). Both use the real Valve DLL - no DRM emulator.
+- The game files are the only real bulk (about 95 GB for MW5, ~1.5 GB for SpiderHeck); the wrapper engine itself is roughly 3 GB and fully portable.
+- A wrapper can be cloned for another game on the same engine (APFS copy-on-write is instant and near-free) instead of rebuilt - SpiderHeck reused MW5's.
 - Full detail - every gotcha, controllers, performance tuning - is in [AGENTS.md](AGENTS.md).
 
 ## Quick start
