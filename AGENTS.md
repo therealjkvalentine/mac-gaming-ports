@@ -110,6 +110,43 @@ open ~/Applications/Sikarugir/<Game>.app
 
 ---
 
+## Going fully Steam-free: Goldberg for owned games
+
+Some games refuse to run without the Steam client in the same Wine session (SpiderHeck hangs on
+"Loading..."; MW5 gates DLC behind a live Steam). For a game **you own**, you can drop that runtime
+dependency with the open-source **Goldberg Steamworks emulator**
+([gbe_fork](https://github.com/Detanup01/gbe_fork)) - it answers the game's Steamworks calls locally, so
+the game runs offline with no Steam process, reports owned DLC, and (below) can do LAN. This removes an
+always-online / Steam-running requirement for software you bought - it is not a crack and not piracy.
+
+Apply it per game:
+1. Find the game's `steam_api64.dll` - UE4 games keep it under
+   `Engine/Binaries/ThirdParty/Steamworks/Steamv1XX/Win64/`, Unity games under `<Game>_Data/Plugins/x86_64/`.
+2. Read its interface versions:
+   `strings -n 6 steam_api64.dll | grep -E 'Steam[A-Za-z]+0[0-9][0-9]$|_INTERFACE_VERSION[0-9]{3}$' | sort -u`
+3. Back up the original, then drop in Goldberg's `regular/x64/steam_api64.dll`.
+4. Beside it, create `steam_settings/` with: `steam_appid.txt` (the AppID), `steam_interfaces.txt` (the
+   versions from step 2), `configs.app.ini` -> `[app::dlcs]` `unlock_all=1`, and `configs.main.ini` ->
+   `[main::connectivity]` `offline=1` + `disable_networking=1` (solo) **or** `offline=0` +
+   `disable_networking=0` (to allow LAN, below).
+5. Launch with a plain `open` - no Steam. Goldberg writes a `GSE Saves/<AppID>/` folder as proof it
+   initialized; a healthy Unity log shows `Steamworks is not initialized` count = 0.
+
+Reversible: restore `steam_api64.dll.orig-backup`. Verified on owned MW5 (DLC, offline) and SpiderHeck
+(no more "Loading..." hang). Does **not** apply to EA/Origin DRM (see the NFS entry) - Goldberg only
+stubs Steamworks.
+
+### LAN co-op without internet
+Goldberg also emulates Steam's lobby + P2P networking over the LAN (UDP broadcast, port 47584) - so a
+game that uses Steam networking can do **offline LAN co-op** among your own copies on one router (a
+travel router on a plane). Each machine needs: the same game build + same mods, Goldberg with a
+**unique** `account_name` + `account_steamid` (in `steam_settings/configs.user.ini`), the same subnet
+and port, and `offline=0` / `disable_networking=0`. Games with an in-game LAN browser find each other
+automatically; invite-only games (MW5) use Goldberg's bundled `lobby_connect` tool to join the host's
+lobby. Caveat: games whose crossplay rides on EOS/Epic rather than Steam networking won't LAN this way.
+
+---
+
 ## Controllers
 
 Games that support XInput work: Wine presents any macOS-connected controller (Xbox, PS4/DS4,

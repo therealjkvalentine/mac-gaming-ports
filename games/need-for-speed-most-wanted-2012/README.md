@@ -38,3 +38,15 @@ licensed).
 - **Reducing overhead:** once the copy is linked to EA, it may be installable via the EA app alone
   (dropping the Steam client and the port-conflict), but the EA app itself is still required at launch.
   There is no fully launcher-free legitimate configuration.
+
+## Multiplayer, Goldberg, and nfsmwo.com
+- **Goldberg does not help here.** NFS MW 2012's DRM is EA/Origin, not Steamworks; Goldberg only stubs
+  Steam, so it cannot make this title offline or portable. (Goldberg works for our Steamworks titles -
+  MW5, SpiderHeck - but not EA DRM.)
+- **nfsmwo.com is a different game.** "Most Wanted Online" restores multiplayer for **NFS: Most Wanted
+  2005** (`speed.exe`), not this 2012 Criterion game (`NFS13.exe`). The 2012 game's online (EA Autolog)
+  is shut down, has no LAN, and has no revival.
+- **For NFS LAN on a plane, the 2005 Most Wanted is the title** - it has true LAN via the
+  [NFSLAN tool](https://github.com/xan1242/NFSLAN) (`server.dll`) plus the [nfsmwo.com](https://nfsmwo.com/)
+  fan online. A different, older, 32-bit game (same Apple-Silicon caveat as MW4), but genuinely
+  LAN-capable - unlike this 2012 version.
