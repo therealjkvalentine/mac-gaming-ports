@@ -28,7 +28,7 @@ Candidates (want a portable Mac version; not built yet):
 | Bloodstained: Ritual of the Night | High | Unreal Engine 4 / DX11 / single-player - essentially identical to MW5 |
 | BattleTech (HBS) | High | Unity / DX11 / single-player; the old native Mac build is broken on Apple Silicon, so the Wine route is the fix |
 
-Tried, does not run on Apple Silicon (documented dead ends):
+Tried, then fixed - MechWarrior 4 now boots via a runtime memory patch + windowed mode (see its guide). Original analysis:
 
 | Game | Why | Guide |
 |---|---|---|

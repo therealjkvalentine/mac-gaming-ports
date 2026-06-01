@@ -1,38 +1,45 @@
-# MechWarrior 4: Mercenaries - Apple Silicon (does NOT work on the free stack)
+# MechWarrior 4: Mercenaries - Apple Silicon (works, with a runtime patch)
 
-Status: **Does not run on Apple Silicon via Wine.** Documented here so the dead end is on record.
-Free MekTek release (Microsoft-sanctioned, 2010). Engine: 2002, 32-bit, DirectX 8. No DRM (freeware).
+Status: **Boots to a stable menu** on Apple Silicon via a runtime memory patch + windowed mode -
+verified headless (55s alive, zero crashes). Free MekTek release. Engine: 2002, 32-bit, DirectX 8. No DRM.
+Gameplay (missions / native LAN) not yet exercised end-to-end - see caveats.
 
-> The appeal: MW4: Mercenaries has true **native LAN** multiplayer - no Steam, no emulator - the ideal
-> "two laptops on a plane" game. The catch: it will not start on Apple Silicon under free Wine.
+> This is the repo's one title that needed a binary fix. The startup crash is defeated by a runtime
+> memory patch (the exe is packed, so it's patched in RAM, not on disk), and the fullscreen failure is
+> dodged by running in a Wine virtual desktop.
 
-## What works
-- Free download: the MekTek release is on the [Internet Archive](https://archive.org/details/mek-tek)
-  (~1.7 GB RAR). Extract with `unar`, **not** `7z` - 7z's RAR codec drops ~1300 files; `unar` is clean.
-  It is pre-extracted game files (`MW4Mercs.exe` at the root), no installer.
-- 32-bit launches: Sikarugir's Wine 10 starts the 32-bit exe via experimental wow64 (MoltenVK comes up),
-  confirming 32-bit-on-Apple-Silicon is viable in general.
+## Get the game
+Free MekTek release on the [Internet Archive](https://archive.org/details/mek-tek) (~1.7 GB RAR).
+Extract with `unar` (NOT 7z - its RAR codec drops files). Pre-extracted game files, no installer.
 
-## Why it doesn't run: the GetProcessorDetails crash
-MW4 crashes at startup: `Fatal Error: Nested exception! - Cause: 'GetProcessorDetails'` /
-`Attempt to read from address 0x00000094`. That is MW4's ancient CPU-detection code null-dereferencing.
+## Launch
+```sh
+zsh ~/Games/MechWarrior4/play-mw4.sh
+```
+Launches windowed, waits ~5s for the packed code to decompress, attaches with lldb and applies the
+startup patch, then the game runs.
 
-It is **not fixable with Wine config** - proven by an autosolver that cycled Windows version
-(XP/2000/98/7), CPU core count (`WINE_CPU_TOPOLOGY=1:0`), and a registry CPU-name spoof. Even after the
-CPU registry verifiably read `Pentium 4`, the crash was byte-identical. So MW4 is **not** reading the
-registry; it does low-level CPU detection (CPUID / a system call) that fails under the Rosetta + wow64
-translation, where the CPU identifies as `VirtualApple @ 2.50GHz`.
+## What was wrong, and the fix (the RE)
+Startup crash: `GetProcessorDetails` / page fault reading null+`0x94`. winver, CPU-name spoof, and
+core-count (`WINE_CPU_TOPOLOGY`) changes did nothing. The exe is **packed** (16 MB virtual `.text` from a
+1.4 MB file), so the crash code isn't on disk. Proper RE got it:
+1. `lldb` attach to the running game + `memory read` the **decompressed** code (packing is irrelevant in RAM).
+2. capstone disassembly pinned the fault: `0x6fabaa: mov cl,[eax+0x94]` - a small routine copying a byte
+   from its (null) second argument.
+3. Patch in RAM to `xor cl,cl` + NOPs (`8a 88 94 00 00 00` -> `30 c9 90 90 90 90`): use a 0 byte instead
+   of dereferencing null. `play-mw4.sh` re-applies this with lldb on every launch.
 
-## Options (none are free + easy)
-1. **winerosetta** ([Gcenx](https://github.com/Gcenx/winerosetta)) - a shim for x86 instructions Rosetta
-   misses on Apple-Silicon Wine. Built for legacy 32-bit WoW; may not bite a logic null-deref, but the
-   cheapest first try.
-2. **A Wine 11 engine** - reworked wow64; may present CPU info without tripping the bug.
-3. **Binary-patch `MW4Mercs.exe`** - NOP the failing CPU-detection call. Surgical, permanent, DIY.
-4. **A real x86 VM** (UTM / QEMU, free) - a genuine x86 CPU makes CPUID work and MW4 just runs; native
-   LAN works inside the VM. Heavy and slower, but guaranteed. The same VM would also host 2005-NFS LAN.
-5. **A Windows laptop** - MW4 is native there and LAN is trivial. The pragmatic group answer.
+Second hurdle: a "can't go fullscreen" dialog whose *cleanup* heap-crashed (`SimpleDialogBox`, "free
+invalid memory"). Fixed by running windowed (`wine explorer /desktop=...`) so that dialog never appears.
 
-## The Mac alternative
-Since the Mac cannot run MW4, the mech-LAN-on-Mac answer is **MechWarrior 5 + Goldberg LAN** (see that
-entry) - it runs flawlessly. Keep MW4 for any Windows machines in the group.
+## Native LAN (the point of MW4)
+MW4 has built-in LAN multiplayer (Multiplayer -> LAN) - no Steam, no emulator. On a closed router each
+machine runs the game (Mac: `play-mw4.sh`; Windows: native), one hosts, the others join. The no-emulator
+plane option. (Not yet tested end-to-end on the Mac build.)
+
+## Caveats / not yet verified
+- Headless verification confirms "alive + GPU up + no crash for a minute" = a stable menu, not a black
+  screen - but the menu *render* and actual *gameplay* aren't visually confirmed yet.
+- Going into a mission/Instant Action may surface more null-derefs; they're patchable the same way
+  (lldb dump -> capstone -> memory write).
+- The patch substitutes a `0` for one byte that routine copied (looked like a string/stat field) - cosmetic.
