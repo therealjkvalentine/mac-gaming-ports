@@ -9,3 +9,6 @@ mw5-windows/
 prefix/
 *.log
 .DS_Store
+# Decoded/derived game art for local experiments (copyrighted; tools rebuild it)
+games/*/texture-lab/*
+!games/*/texture-lab/README.md

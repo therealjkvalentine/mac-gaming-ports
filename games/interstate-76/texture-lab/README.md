@@ -1,0 +1,49 @@
+# texture-lab - experiment with I76 texture enhancement
+
+Workspace for editing Interstate '76 art and seeing it in-game. Everything here except this
+README is gitignored (decoded game art is copyrighted - same rule as `game-data/`).
+Pipeline background: [../docs/HD-TEXTURES-RESEARCH.md](../docs/HD-TEXTURES-RESEARCH.md).
+
+## Layout
+
+- `src/` - decoded original PNGs to start from, plus the level palette
+  (`t01.act`, and `_palette-t01.png` to eyeball it). `zdash101.*.png` are the two 256x128
+  tiles of the training vehicle's lower dashboard - the easiest art to verify in-game.
+- `enhanced/` - put your edited PNGs here (same filenames, same dimensions).
+- `build/` - generated pak/pix/cbk output.
+
+## Workflow
+
+```sh
+cd games/interstate-76
+GAME=~/Applications/Sikarugir/Interstate76.app/Contents/SharedSupport/prefix/"drive_c/GOG Games/Interstate 76"
+
+# 1. (once) extract the archive somewhere and decode more art
+python3 tools/zfs_extract.py "$GAME/I76.ZFS" /tmp/i76-assets
+python3 tools/i76img.py decode /tmp/i76-assets/zdash201.pak /tmp/i76-assets/t01.act \
+        texture-lab/src/zdash201.png --cbk-dir /tmp/i76-assets
+
+# 2. edit PNGs (any editor / AI tool) -> save to texture-lab/enhanced/ at the SAME size.
+#    Colors are re-quantized to the level's 256-color palette on encode - check
+#    src/_palette-t01.png; wild new hues will snap to the nearest palette entry.
+#    Keep transparent pixels transparent (they become palette index 0xFF).
+
+# 3. rebuild the pak (tile order and .vqm names must match the original .pix manifest)
+python3 tools/i76img.py makepak texture-lab/build/zdash101 texture-lab/src/t01.act HDT1.CBK \
+    texture-lab/enhanced/zdash101.zdash101.png ZDASH101.vqm \
+    texture-lab/enhanced/zdash101.zdash102.png ZDASH102.vqm
+
+# 4. install (loose-file override - no repacking) and restart the game
+cp texture-lab/build/zdash101.pak texture-lab/build/zdash101.pix texture-lab/build/hdt1.cbk "$GAME/ADDON/"
+./play.sh
+
+# undo: delete those files from "$GAME/ADDON/"
+```
+
+Menu-shell art is even easier: `SP256/*.BMP` in the game folder are plain 8-bit BMPs -
+edit in place (keep 8-bit indexed format), no tools needed.
+
+Upscaler used for the first demo: realesrgan-ncnn-vulkan (free, Apple Silicon) - general
+model crisps edges but speckles tiny gauge text; try `realesrgan-x4plus-anime`, chaiNNer
+model zoo, or SD img2img at low denoise for better results. Enhance at 4x, then downsample
+back to the original size (the engine can't take bigger files - see the research doc).
