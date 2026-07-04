@@ -1,12 +1,14 @@
 # Interstate '76 (GOG Gold) - Apple Silicon (port in progress)
 
 Status: **Playable on the free stack** (Sikarugir Wine 10, wow64), built-in 20 FPS physics
-limiter. **Default: `-glide`** - the game's own Glide renderer through the GOG-bundled OpenGLide
-(Glide -> OpenGL): bright 3dfx-gamma colors, 1280x960 window, instant start, no shader warmup.
-One quirk: alt-tabbing away minimizes the window (Wine behavior for exclusive-fullscreen apps);
-it auto-restores on refocus. **Fallback: `-gdi`** - small (640x480), darker, but a completely
-normal window with zero quirks. Pick via **I76 Launcher.app** (below). Not a Steam title - GOG
-release, so no SteamCMD: you supply the game files yourself (see [game-data/](game-data/)).
+limiter. **One mode:** the game's own Glide renderer through the GOG-bundled OpenGLide
+(Glide -> OpenGL) - bright 3dfx-gamma colors, 1280x960 in-sim window, instant start, no shader
+warmup. **Launch = double-click `Interstate76.app`** (or [`play.sh`](play.sh)); the app's
+executable is our compiled [direct-launch stub](i76-launch-stub.swift), because the stock
+Sikarugir launcher breaks Glide two ways (hardcoded `CX_FWD_COMPAT_GL_CTX=1` crashes OpenGLide's
+legacy GL; wrong CWD hides `OpenGLid.INI`) - and LaunchServices won't run script executables, so
+it's a small Mach-O. Not a Steam title - GOG release, so no SteamCMD: you supply the game files
+yourself (see [game-data/](game-data/)).
 
 **Disk use (~4.1 GB for a ~470 MB game):** the wrapper is self-contained - Wine engine (~760 MB) +
 the C: drive prefix (~2.8 GB: Windows system DLLs, fonts, registry, the DXVK shader caches) +
@@ -18,41 +20,25 @@ OpenGL), `d3d`, `redline` (software), `powervr`, and an undocumented **`gdi`** (
 blit - added/fixed by the AiO patch). No DirectX 11 anywhere - D3DMetal is irrelevant (set
 `D3DMETAL=0`).
 
-## The two modes
+## The window (sizes, moving, fullscreen)
 
-| | **Glide (default)** | **Classic `-gdi` (fallback)** |
-|---|---|---|
-| Renderer | game's Glide -> bundled OpenGLide -> OpenGL | 8-bit software blit |
-| Look | **bright 3dfx-gamma colors, filtered** (matches Windows) | darker, chunkier, period-correct |
-| Window | 1280x960 (the Wine virtual-desktop size) | fixed 640x480 |
-| Start | instant - no shader warmup (plain OpenGL path) | instant |
-| Quirk | **alt-tab minimizes the window; auto-restores on refocus** (Wine's hardcoded behavior for exclusive-fullscreen ddraw apps - the shell holds that mode; mitigations `WindowsFloatWhenInactive=all` + msync are in the recipe) | none - completely normal window |
+- The window is **640x480 during the menus** and **1280x960 in the sim** (the Wine
+  virtual-desktop registry size - change `HKCU\Software\Wine\Explorer\Desktops -> i76` and
+  restart for bigger). On those transitions it may snap back to the screen's top-left; drag it
+  wherever once the sim is up.
+- **Alt-tab minimizes the window; it auto-restores on refocus** (Wine's hardcoded behavior for
+  exclusive-fullscreen ddraw apps; mitigations `WindowsFloatWhenInactive=all` + msync are in the
+  recipe and make the restore reliable).
+- **No fullscreen**: Wine windows don't participate in macOS fullscreen (`AXFullScreen`
+  unsupported), and avoid the green zoom button. macOS screen zoom (Accessibility) in a pinch.
 
-**Which mode am I running?** `ps ax | grep i76.exe` shows the flag. Visual tells: bright + big
-window = Glide; dark + small = `-gdi`.
+**Colors/gamma:** the game itself sets the 3dfx gamma through the Glide API and OpenGLide honors
+it - bright out of the box, matching Windows. No INI gamma knob exists; fine-tune with the
+game's own brightness (Options -> Graphic Detail).
 
-**Window size:** the Glide window tracks the Wine virtual-desktop registry size (recipe step 5;
-default `1280x960` - change `HKCU\Software\Wine\Explorer\Desktops -> i76` and restart). `-gdi`
-is fixed 640x480 (engine limit). **No fullscreen in either mode**: Wine windows don't
-participate in macOS fullscreen (`AXFullScreen` unsupported), and avoid the green zoom button.
-macOS screen zoom (Accessibility) works in a pinch.
-
-**Colors/gamma:** the game itself sets the 3dfx gamma through the Glide API, and OpenGLide
-honors it - that's why Glide mode is bright out of the box. There is no gamma knob in
-`OpenGLid.INI` or the `-gdi` path; use the game's own brightness (Options -> Graphic Detail) to
-taste in either mode.
-
-## Launching & picking modes (GUI)
-
-Build the chooser app once:
-```sh
-osacompile -o "$HOME/Applications/Sikarugir/I76 Launcher.app" I76-Launcher.applescript
-```
-**I76 Launcher.app** presents *Glide (bright, 1280x960)* / *Classic (small, zero quirks)* /
-*Quit running game* - it sets the wrapper's launch flag and opens it. CLI: [`play.sh`](play.sh)
-launches whatever mode is currently set; flip modes with
-`plutil -replace "Program Flags" -string '-gdi' ~/Applications/Sikarugir/Interstate76.app/Contents/Info.plist`
-(or `'-glide'`).
+**Emergency fallback:** if the Glide path ever breaks, the exe has an undocumented windowed
+software renderer: run `i76.exe -gdi` (darker, fixed 640x480, but a completely normal window
+and immune to every launcher quirk - it reads no INI).
 
 ## The dgVoodoo detour (retired - kept for the record)
 

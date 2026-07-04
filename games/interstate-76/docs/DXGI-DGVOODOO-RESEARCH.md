@@ -99,6 +99,22 @@ Both are real and neither is quickly fixable on this exact stack:
    launched with CWD = game dir; `play.sh` and the I76 Launcher app do exactly that. `-gdi` reads
    no INI and is immune, so it's the only mode safe to launch via the wrapper's own `open`.
 
+## Postscript 2: the Sikarugir launcher itself breaks Glide (and the fix)
+
+Chasing why wrapper (`open`) launches of plain `-glide` went fullscreen-black while identical CLI
+launches worked exposed a second launcher-injected killer: the Sikarugir launcher hardcodes
+**`CX_FWD_COMPAT_GL_CTX=1`** (no plist key controls it). A forward-compatible GL context removes
+all legacy OpenGL - OpenGLide is pure immediate-mode legacy GL - reproduced as a crash at
+`i76+0x4507C` by setting just that env var on an otherwise-working CLI launch. Combined with the
+CWD/INI issue, the stock launcher cannot start this game's Glide mode at all.
+
+Fix that shipped: the wrapper's `Contents/MacOS/Sikarugir` executable is replaced with a small
+compiled Mach-O stub ([`i76-launch-stub.swift`](../i76-launch-stub.swift)) that sets the env,
+`cd`s into the game dir, and `execv`s wine directly (original launcher kept as `Sikarugir.orig`).
+Two implementation traps for future porters: LaunchServices on macOS 26 silently refuses shell
+scripts as bundle executables (must be Mach-O), and `codesign --deep` chokes on the
+`launcher`/`wineskinlauncher` symlinks - sign just the new executable ad-hoc instead.
+
 ## Postscript: the hybrid was retired (same day)
 
 After all that, plain OpenGLide `-glide` (CWD-fixed) turned out to deliver the same bright
