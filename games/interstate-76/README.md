@@ -1,11 +1,64 @@
 # Interstate '76 (GOG Gold) - Apple Silicon (port in progress)
 
-Status: **In progress.** Verified working on Windows (dgVoodoo2, hard 20 FPS cap); the Mac port
-attempt is underway on this repo's free stack. Not a Steam title - GOG release, so no SteamCMD:
+Status: **Renders and plays on the free stack** (Sikarugir Wine 10, wow64, virtual desktop,
+Glide -> OpenGLide -> OpenGL). Intro cinematic, menus, and in-sim training mode all render
+correctly. FPS-cap verification in progress. Not a Steam title - GOG release, so no SteamCMD:
 you supply the game files yourself (see [game-data/](game-data/)).
 
 Engine: 1997, 32-bit, renders via **Glide** (GOG bundles the OpenGLide Glide-to-OpenGL wrapper).
-No DirectX 11 anywhere - D3DMetal is irrelevant to this one; the challenge is different.
+No DirectX 11 anywhere - D3DMetal is irrelevant to this one (set `D3DMETAL=0`).
+
+## Discovery: the GOG 2019 build IS the AiO patch (limiter included)
+
+The GOG Gold `i76.exe` (2019-09-01, MD5 `60abf7bc...`) is **byte-identical** to UCyborg's
+AiO Unofficial Patch final build (09/01/2019), and the install ships `I76PATCH.DLL` - the AiO's
+**built-in frame limiter, hardcoded to 20 FPS** (QueryPerformanceCounter + Sleep, no config file).
+So the physics-correct cap is already inside this exe on every platform. The Windows-side notes
+("no cap configured") predate this discovery; the dgVoodoo `FPSLimit = 20` there was belt+braces.
+The exe also contains a `toggle_framerate` KEYBOARD.MAP action (not in the stock map) - bind it
+to get an in-game FPS readout:
+
+```
+toggle_framerate     {
+   + keyboard     Zero
+   - keyboard     Shift
+   - keyboard     Control
+}
+```
+
+## The working recipe (what got it this far)
+
+1. Clone any Sikarugir Wine-10 wrapper (APFS `cp -c`), gut the old game from the prefix.
+2. Unzip the GOG install to `drive_c/GOG Games/Interstate 76/` (the zip's backslash paths
+   convert cleanly; `unzip` exits 1 with a warning - harmless).
+3. `Info.plist`: `Program Name and Path` = `C:\GOG Games\Interstate 76\i76.exe`,
+   `Program Flags` = `-glide`, `D3DMETAL` = `0`.
+4. Registry (per-app): `HKCU\Software\Wine\AppDefaults\i76.exe` -> `Version` = `win98`.
+5. **Registry: a Wine virtual desktop is REQUIRED** - without it the game page-faults at
+   `01B82C26` (it calls `NtUserChangeDisplaySettings`, macOS refuses exclusive 640x480, the game
+   dereferences null): `HKCU\Software\Wine\AppDefaults\i76.exe\Explorer` -> `Desktop` = `i76`
+   and `HKCU\Software\Wine\Explorer\Desktops` -> `i76` = `1280x960`.
+6. Launch via the wrapper (`open .../Interstate76.app`).
+
+Do NOT force `renderer=gdi` for ddraw - the shell creates a Direct3D device and crashes at the
+same address if refused. The default wined3d GL path works (one harmless
+`GL_INVALID_FRAMEBUFFER_OPERATION` at startup).
+
+Quirks seen on Mac so far:
+
+- The **sim pauses when the app loses focus**; menus, cinematics, and the pause menu keep
+  rendering and keep accepting input (even input posted directly to the process). Fine for
+  play; matters for automation.
+- Mouse hit-testing is offset in the scaled virtual desktop (the known 640x480 internal-coords
+  quirk) - navigate menus by keyboard: arrows + Enter, numbers pick menu items.
+- Do not maximize/zoom the virtual-desktop window (it flashes and vanishes); dragging it is fine.
+- `wine explorer.exe /desktop` and two `winedevice.exe` processes **busy-spin at 100% CPU each**
+  while the game runs (Sikarugir Wine 10 quirk, ~3 cores; the game itself is light). Harmless on
+  an M-class chip but ugly; kill nothing - they belong to the session.
+- `wow64_NtSetLdtEntries` stub warning at startup is harmless (unlike MW4, nothing depends on it).
+- Wine-level FPS measurement: relaunch from CLI with `WINEDEBUG=-plugplay,+fps,+timestamp` and
+  watch `wglSwapBuffers` lines. The 2D shell/menus tick at ~14-15 fps by design (the AiO limiter
+  also throttles menus/cutscenes to save CPU).
 
 ## THE ONE RULE: cap the game at ~20 FPS or the physics break
 
