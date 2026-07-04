@@ -71,16 +71,11 @@ AiO Unofficial Patch final build (09/01/2019), and the install ships `I76PATCH.D
 **built-in frame limiter, hardcoded to 20 FPS** (QueryPerformanceCounter + Sleep, no config file).
 So the physics-correct cap is already inside this exe on every platform. The Windows-side notes
 ("no cap configured") predate this discovery; the dgVoodoo `FPSLimit = 20` there was belt+braces.
-The exe also contains a `toggle_framerate` KEYBOARD.MAP action (not in the stock map) - bind it
-to get an in-game FPS readout:
-
-```
-toggle_framerate     {
-   + keyboard     Zero
-   - keyboard     Shift
-   - keyboard     Control
-}
-```
+(The exe contains a `toggle_framerate` KEYBOARD.MAP action string, but binding it - tried with
+`Zero` - produced no visible effect, and if it does anything it more likely toggles the *limiter*
+than a counter. Don't bind it. For an FPS readout in `-glide` mode use the DXVK HUD instead:
+`dxvk.conf` next to the exe with `dxvk.hud = fps,compiler` - `compiler` also visualizes the
+per-launch async-shader warmup, see quirks.)
 
 ## The working recipe (what got it this far)
 
@@ -123,6 +118,11 @@ Quirks seen on Mac so far:
 - Wine-level FPS measurement: relaunch from CLI with `WINEDEBUG=-plugplay,+fps,+timestamp` and
   watch `wglSwapBuffers` lines. The 2D shell/menus tick at ~14-15 fps by design (the AiO limiter
   also throttles menus/cutscenes to save CPU).
+- **`-glide` warmup: the first ~2 minutes of each session run at a slideshow pace** while
+  DXVK-async + MoltenVK compile the sim's shaders (this MoltenVK has no persistent shader cache,
+  so the Metal-side compile repeats per launch; the `i76.dxvk-cache` next to the exe shortens it
+  as it grows). Brief hitches on first-seen effects (first explosion, first smoke) are the same
+  thing and stop recurring within the session. Let it warm up in the menu/first mission start.
 
 ## THE ONE RULE: cap the game at ~20 FPS or the physics break
 
