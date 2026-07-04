@@ -124,6 +124,15 @@ Full handoff brief: [docs/MAC-SETUP.md](docs/MAC-SETUP.md). Deep research with s
 [docs/i76-research-full.txt](docs/i76-research-full.txt). Windows-side notes:
 [docs/MODERN-SETUP.md](docs/MODERN-SETUP.md).
 
+## Controls: Mac arrow keys (required fix)
+
+winemac delivers Mac arrow keys as the game's `Grey*` (numpad-cluster) codes; the stock
+`KEYBOARD.MAP` binds those to glance/track camera and puts **driving** on the plain arrow names
+Mac arrows never produce - so arrows look around instead of steering. Run
+[`fix-arrows-for-mac.sh`](fix-arrows-for-mac.sh) on the `KEYBOARD.MAP` in your game folder
+(it swaps the four arrow tokens; backup written beside it; restart the game). Glance/track land
+on the numpad - still reachable on a full-size external keyboard.
+
 ## Controls: the MW5-style laptop layout
 
 [`KEYBOARD.MAP.mw5`](KEYBOARD.MAP.mw5) - drop-in replacement for the game's `KEYBOARD.MAP`
