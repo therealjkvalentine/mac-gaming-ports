@@ -1,5 +1,8 @@
 # This repo is docs + scripts ONLY. Never commit the game, prefixes, tokens, or logs.
 *.app/
+# Copy-protected game data (OpenRA-style: bring your own; see games/<slug>/game-data/README.md)
+games/*/game-data/*
+!games/*/game-data/README.md
 logs/
 steamcmd/
 mw5-windows/

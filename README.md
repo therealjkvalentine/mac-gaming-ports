@@ -22,6 +22,7 @@ Candidates (want a portable Mac version; not built yet):
 |---|---|---|
 | Bloodstained: Ritual of the Night | High | Unreal Engine 4 / DX11 / single-player - essentially identical to MW5 |
 | BattleTech (HBS) | High | Unity / DX11 / single-player; the old native Mac build is broken on Apple Silicon, so the Wine route is the fix |
+| [Interstate '76](games/interstate-76/) (GOG, not Steam) | Medium - port in progress | 1997, 32-bit, Glide renderer; physics tied to framerate, needs a verified ~20 FPS cap on macOS. Windows build verified; handoff docs + configs in the game folder. First non-Steam, bring-your-own-data title (OpenRA-style `game-data/`). |
 
 Dead end on Apple Silicon (fully diagnosed - see the guide):
 
