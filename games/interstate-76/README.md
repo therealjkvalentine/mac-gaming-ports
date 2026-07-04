@@ -38,7 +38,12 @@ toggle_framerate     {
    `01B82C26` (it calls `NtUserChangeDisplaySettings`, macOS refuses exclusive 640x480, the game
    dereferences null): `HKCU\Software\Wine\AppDefaults\i76.exe\Explorer` -> `Desktop` = `i76`
    and `HKCU\Software\Wine\Explorer\Desktops` -> `i76` = `1280x960`.
-6. Launch via the wrapper (`open .../Interstate76.app`).
+6. **Registry: `HKCU\Software\Wine\Mac Driver` -> `WindowsFloatWhenInactive` = `all`.** Without
+   it, the moment another app takes focus (especially a fullscreen app on its own Space), winemac
+   treats the desktop window - which exactly equals Wine's virtual screen - as a fullscreen window
+   and MINIMIZES it (parks it at -16000,-16000). Symptom: the game window appears, draws once,
+   and vanishes within a few hundred ms. This key makes it float like a normal window.
+7. Launch via the wrapper (`open .../Interstate76.app`).
 
 Do NOT force `renderer=gdi` for ddraw - the shell creates a Direct3D device and crashes at the
 same address if refused. The default wined3d GL path works (one harmless
@@ -51,10 +56,13 @@ Quirks seen on Mac so far:
   play; matters for automation.
 - Mouse hit-testing is offset in the scaled virtual desktop (the known 640x480 internal-coords
   quirk) - navigate menus by keyboard: arrows + Enter, numbers pick menu items.
-- Do not maximize/zoom the virtual-desktop window (it flashes and vanishes); dragging it is fine.
-- `wine explorer.exe /desktop` and two `winedevice.exe` processes **busy-spin at 100% CPU each**
-  while the game runs (Sikarugir Wine 10 quirk, ~3 cores; the game itself is light). Harmless on
-  an M-class chip but ugly; kill nothing - they belong to the session.
+- Do not maximize/zoom the virtual-desktop window; dragging it is fine. (The
+  flash-and-vanish-on-refocus bug is fixed by `WindowsFloatWhenInactive` - step 6.)
+- **CLI launches must set `WINEMSYNC=1` alongside `WINEESYNC=1`** (the wrapper's launcher sets
+  both; msync wins). esync-only sends every Wine process (explorer, 2x winedevice, the game) into
+  a 100%-CPU busy-spin on macOS. With msync, all of them idle at ~0-4%.
+- Never kill the prefix's `explorer.exe` while playing - it's the Wine session shell/clipboard
+  manager; the game exits shortly after it dies.
 - `wow64_NtSetLdtEntries` stub warning at startup is harmless (unlike MW4, nothing depends on it).
 - Wine-level FPS measurement: relaunch from CLI with `WINEDEBUG=-plugplay,+fps,+timestamp` and
   watch `wglSwapBuffers` lines. The 2D shell/menus tick at ~14-15 fps by design (the AiO limiter
