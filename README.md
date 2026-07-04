@@ -15,6 +15,7 @@ Working on the free stack (Sikarugir/Wine + D3DMetal; free, open-source tooling 
 | MechWarrior 5: Mercenaries | 784080 | Playable - D3DMetal, controller, all DLC, fully offline via Goldberg, cheats + LAN prepped | [games/mechwarrior-5-mercenaries](games/mechwarrior-5-mercenaries/) |
 | SpiderHeck | 1329500 | Playable - D3DMetal, controller, 4-player couch co-op, fully offline via Goldberg | [games/spiderheck](games/spiderheck/) |
 | Need for Speed: Most Wanted (2012) | 1262560 | Playable - D3DMetal, self-contained, no CrossOver; one-time EA prompt per launch (servers dead) | [games/need-for-speed-most-wanted-2012](games/need-for-speed-most-wanted-2012/) |
+| Interstate '76 (GOG, not Steam) | - | Playable - windowed via the exe's hidden `-gdi` mode, built-in 20 FPS physics limiter (the GOG exe ships the AiO patch); bring your own game files (OpenRA-style `game-data/`) | [games/interstate-76](games/interstate-76/) |
 
 Candidates (want a portable Mac version; not built yet):
 
@@ -22,7 +23,6 @@ Candidates (want a portable Mac version; not built yet):
 |---|---|---|
 | Bloodstained: Ritual of the Night | High | Unreal Engine 4 / DX11 / single-player - essentially identical to MW5 |
 | BattleTech (HBS) | High | Unity / DX11 / single-player; the old native Mac build is broken on Apple Silicon, so the Wine route is the fix |
-| [Interstate '76](games/interstate-76/) (GOG, not Steam) | Medium - port in progress | 1997, 32-bit, Glide renderer; physics tied to framerate, needs a verified ~20 FPS cap on macOS. Windows build verified; handoff docs + configs in the game folder. First non-Steam, bring-your-own-data title (OpenRA-style `game-data/`). |
 
 Dead end on Apple Silicon (fully diagnosed - see the guide):
 

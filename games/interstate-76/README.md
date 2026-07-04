@@ -1,12 +1,37 @@
 # Interstate '76 (GOG Gold) - Apple Silicon (port in progress)
 
-Status: **Renders and plays on the free stack** (Sikarugir Wine 10, wow64, virtual desktop,
-Glide -> OpenGLide -> OpenGL). Intro cinematic, menus, and in-sim training mode all render
-correctly. FPS-cap verification in progress. Not a Steam title - GOG release, so no SteamCMD:
-you supply the game files yourself (see [game-data/](game-data/)).
+Status: **Playable on the free stack** (Sikarugir Wine 10, wow64) - windowed, stable, well-behaved
+window, built-in 20 FPS physics limiter. Launch flags: **`-gdi`** (see below - this is the key to
+the whole port). FPS-cap/physics verification in progress; dgVoodoo hardware-Glide upgrade is the
+open follow-up. Not a Steam title - GOG release, so no SteamCMD: you supply the game files
+yourself (see [game-data/](game-data/)).
 
-Engine: 1997, 32-bit, renders via **Glide** (GOG bundles the OpenGLide Glide-to-OpenGL wrapper).
-No DirectX 11 anywhere - D3DMetal is irrelevant to this one (set `D3DMETAL=0`).
+Engine: 1997, 32-bit. Renderer tokens baked into the exe: `glide` (ZGLIDE -> bundled OpenGLide ->
+OpenGL), `d3d`, `redline` (software), `powervr`, and an undocumented **`gdi`** (windowed software
+blit - added/fixed by the AiO patch). No DirectX 11 anywhere - D3DMetal is irrelevant (set
+`D3DMETAL=0`).
+
+## Why `-gdi` and not `-glide` (the fullscreen-minimize saga)
+
+`-glide` renders and plays, BUT the 2D shell grabs **DirectDraw exclusive fullscreen**, and Wine
+has minimized fullscreen-exclusive windows on focus loss since 1.7.32 (hardcoded in wined3d - no
+registry off-switch in this build; the X11 `UseTakeFocus` workaround doesn't exist on winemac).
+On top of that, winemac's restore-from-minimize for such windows is slow/unreliable (a known Wine
+issue), and winemac has no real virtual-desktop support to absorb it. Symptom: the window draws
+once, then vanishes to (-16000,-16000) within a few hundred ms every time focus moves - unusable
+on a Mac where other apps (especially fullscreen ones on their own Space) constantly hold focus.
+
+`-gdi` runs the whole game (shell + sim) as a **plain window with no exclusive anything** - the
+minimize logic never engages, and the window behaves like any Mac window. The software renderer
+at 640x480 looks period-correct and clean; the built-in 20 FPS limiter applies the same.
+
+Upgrade path (untried): dgVoodoo2 inside the wrapper - Glide -> D3D11 windowed
+(`FullScreenMode=false`, `FPSLimit=20`), the exact config verified on Windows. Needs a D3D11
+feature-level 10.1 target over wined3d-GL or DXVK/MoltenVK for a 32-bit exe (D3DMetal is 64-bit
+only). Would restore hardware Glide visuals (filtering, 1280x960, MSAA) while keeping the normal
+window. Sources: [Wine fullscreen focus-loss behavior](https://forum.winehq.org/viewtopic.php?t=20646),
+[SDL issue on the broken restore](https://github.com/libsdl-org/SDL/issues/5320),
+[winemac virtual-desktop limitation](https://forum.winehq.org/viewtopic.php?t=40541).
 
 ## Discovery: the GOG 2019 build IS the AiO patch (limiter included)
 
@@ -32,7 +57,7 @@ toggle_framerate     {
 2. Unzip the GOG install to `drive_c/GOG Games/Interstate 76/` (the zip's backslash paths
    convert cleanly; `unzip` exits 1 with a warning - harmless).
 3. `Info.plist`: `Program Name and Path` = `C:\GOG Games\Interstate 76\i76.exe`,
-   `Program Flags` = `-glide`, `D3DMETAL` = `0`.
+   `Program Flags` = `-gdi` (NOT `-glide` - see the saga above), `D3DMETAL` = `0`.
 4. Registry (per-app): `HKCU\Software\Wine\AppDefaults\i76.exe` -> `Version` = `win98`.
 5. **Registry: a Wine virtual desktop is REQUIRED** - without it the game page-faults at
    `01B82C26` (it calls `NtUserChangeDisplaySettings`, macOS refuses exclusive 640x480, the game
