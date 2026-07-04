@@ -78,7 +78,35 @@ into the log), `WINEDEBUG=+fps,+timestamp,+loaddll`, MoltenVK's `[mvk-info]` swa
   wine's dxgi (wined3d adapter identity) and DXVK accepts it anyway. Harmless today; this seam is
   exactly where dgVoodoo 2.81+ dies.
 
+## The two frictions that keep the hybrid off the default (2026-07-04, follow-up session)
+
+Both are real and neither is quickly fixable on this exact stack:
+
+1. **Per-launch shader warmup is uncacheable here.** Pipeline path is Glide -> DXVK (D3D->SPIR-V)
+   -> MoltenVK (SPIR-V->MSL->`MTLLibrary`/pipeline). DXVK's `i76.dxvk-cache` (state cache) persists
+   *which* pipelines to build across launches, so DXVK-async pre-declares them - but the actual
+   SPIR-V->Metal compile lives in MoltenVK, and **this MoltenVK (from `dxvk-macOS-async-v1.10.3-20230507`,
+   ~MoltenVK 1.2.x) exposes no persistent pipeline cache**. Full `MVK_CONFIG_*` env dump confirmed:
+   `SHADER_DUMP_DIR` (debug), `SHADER_COMPRESSION_ALGORITHM`, `SHOULD_MAXIMIZE_CONCURRENT_COMPILATION`
+   exist, but there is **no `MVK_CONFIG_*PIPELINE_CACHE*` / on-disk Metal binary-archive option**.
+   So ~2 min of first-session slideshow while it compiles cold, every launch. (Symptoms match
+   exactly: crawl -> smooth -> one-time hitch on first explosion.)
+2. **dgVoodoo.conf is CWD-relative; the wrapper's `open` doesn't cd into the game dir.** Launched
+   via `open Interstate76.app`, dgVoodoo doesn't find `dgVoodoo.conf`, defaults to
+   `FullScreenMode=true` + default OutputAPI, and dies with a fullscreen black window + "Failed to
+   initialize 3D hardware acceleration". Our working hybrid runs were all `cd`-ed into the game dir
+   from a shell. Fix ideas (untried): a `dgVoodoo.conf` copy where the launcher's CWD actually is;
+   a launcher wrapper script that `cd`s first; or check whether dgVoodoo honors a `DGVOODOO_CONF`
+   path / the loading-DLL directory in this version.
+
 ## For future research (pick-up points, in order of promise)
+
+0. **Kill the warmup: newer MoltenVK with a persistent pipeline cache.** MoltenVK gained
+   Metal-binary-archive / serializable `VkPipelineCache` support in later 1.2.x (~1.2.9+) and 1.3.
+   Pairing a newer `libMoltenVK.dylib` (+ matching DXVK-macOS) with a `VkPipelineCache` written to
+   disk would let the SPIR-V->Metal compile persist across launches and largely eliminate the 2-min
+   warmup. Highest-value fix for making the hybrid the daily driver. Verify the env var exists in the
+   candidate dylib first: `strings libMoltenVK.dylib | grep -i pipeline_cache`.
 
 1. **Real DXGI (untested, staged):** upstream DXVK's x32 `dxgi.dll` (mingw PE from
    [dxvk 1.10.3 release](https://github.com/doitsujin/dxvk/releases/tag/v1.10.3)) can be swapped

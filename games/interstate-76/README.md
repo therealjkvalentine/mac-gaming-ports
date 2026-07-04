@@ -1,29 +1,61 @@
 # Interstate '76 (GOG Gold) - Apple Silicon (port in progress)
 
 Status: **Playable on the free stack** (Sikarugir Wine 10, wow64) - windowed, stable, well-behaved
-window, built-in 20 FPS physics limiter. Launch flags: **`-gdi`** (see below - this is the key to
-the whole port). FPS-cap/physics verification in progress; dgVoodoo hardware-Glide upgrade is the
-open follow-up. Not a Steam title - GOG release, so no SteamCMD: you supply the game files
-yourself (see [game-data/](game-data/)).
+window, built-in 20 FPS physics limiter. **Default & recommended launch flag: `-gdi`** - it's
+instant, reliable via `open`, and needs no shader warmup. The `-glide` hybrid (dgVoodoo, bright
+hardware colors) works too but carries a ~2-min per-launch shader-compile warmup that this stack
+**cannot cache away** and is fragile via the wrapper (see "The `-glide` hybrid: real but high-friction"
+below). Not a Steam title - GOG release, so no SteamCMD: you supply the game files yourself
+(see [game-data/](game-data/)).
+
+**Disk use (~4.1 GB for a ~470 MB game):** the wrapper is self-contained - Wine engine (~760 MB) +
+the C: drive prefix (~2.8 GB: Windows system DLLs, fonts, registry, the DXVK shader caches) +
+D3DMetal/DXVK/MoltenVK frameworks (~340 MB) + the game itself (~470 MB). That's the price of a
+portable, no-dependencies `.app`; the game data is the small part.
 
 Engine: 1997, 32-bit. Renderer tokens baked into the exe: `glide` (ZGLIDE -> bundled OpenGLide ->
 OpenGL), `d3d`, `redline` (software), `powervr`, and an undocumented **`gdi`** (windowed software
 blit - added/fixed by the AiO patch). No DirectX 11 anywhere - D3DMetal is irrelevant (set
 `D3DMETAL=0`).
 
-## Why `-gdi` and not `-glide` (the fullscreen-minimize saga)
+## Why `-gdi` is the default (the fullscreen-minimize saga + hybrid friction)
 
-`-glide` renders and plays, BUT the 2D shell grabs **DirectDraw exclusive fullscreen**, and Wine
-has minimized fullscreen-exclusive windows on focus loss since 1.7.32 (hardcoded in wined3d - no
-registry off-switch in this build; the X11 `UseTakeFocus` workaround doesn't exist on winemac).
-On top of that, winemac's restore-from-minimize for such windows is slow/unreliable (a known Wine
-issue), and winemac has no real virtual-desktop support to absorb it. Symptom: the window draws
-once, then vanishes to (-16000,-16000) within a few hundred ms every time focus moves - unusable
-on a Mac where other apps (especially fullscreen ones on their own Space) constantly hold focus.
+`-gdi` runs the whole game (shell + sim) as a **plain 640x480 window with no exclusive anything**.
+It launches correctly via `open` (verified), needs no shader compile, and the built-in 20 FPS
+limiter applies. The software renderer looks period-correct, just darker than the 3dfx path
+(see Colors). This is the reliable daily driver.
 
-`-gdi` runs the whole game (shell + sim) as a **plain window with no exclusive anything** - the
-minimize logic never engages, and the window behaves like any Mac window. The software renderer
-at 640x480 looks period-correct and clean; the built-in 20 FPS limiter applies the same.
+`-glide` (plain OpenGLide, no dgVoodoo) renders and plays BUT its 2D shell grabs **DirectDraw
+exclusive fullscreen**, and Wine has minimized fullscreen-exclusive windows on focus loss since
+1.7.32 (hardcoded in wined3d - no registry off-switch here; the X11 `UseTakeFocus` workaround
+doesn't exist on winemac). Symptom: the window draws once then vanishes to (-16000,-16000) on
+every focus change - unusable on a Mac. The dgVoodoo hybrid (below) fixes the *color* but not this
+launcher fragility, and adds a warmup - so `-gdi` wins for everyday use.
+
+## The `-glide` hybrid: real but high-friction
+
+The dgVoodoo hybrid (bright 1280x960 hardware Glide - see "dgVoodoo2 upgrade - SOLVED" below)
+genuinely works, but two frictions make it a "when I want the pretty version" option, not the
+default:
+
+1. **~2-min shader warmup every launch, uncacheable on this stack.** The sim's shaders go
+   Glide -> DXVK (SPIR-V) -> MoltenVK (MSL -> Metal pipeline). DXVK's `i76.dxvk-cache` persists the
+   D3D pipeline *state* across launches (so it knows what to build), but **this MoltenVK
+   (2023-era, from the DXVK-async bundle) has no on-disk Metal pipeline cache** - no
+   `MVK_CONFIG_*PIPELINE_CACHE*` env var exists - so the SPIR-V->Metal compile repeats from cold
+   every launch. First playthrough of each session crawls (~0.3-1 fps) while it compiles; then it's
+   smooth; first-seen effects (first explosion) hitch once. Cannot be pre-baked without a newer
+   MoltenVK - see the research doc's "For future research".
+2. **Fragile via `open`.** dgVoodoo reads `dgVoodoo.conf` from the process working directory; the
+   Sikarugir launcher's CWD isn't always the game folder, so the conf is missed, dgVoodoo falls
+   back to its built-in defaults (`FullScreenMode=true`, default OutputAPI) and you get a
+   **fullscreen black window + "Failed to initialize 3D hardware acceleration"**. My earlier
+   working hybrid runs were launched from a shell *inside* the game dir. Making it robust via `open`
+   needs the conf found regardless of CWD (unsolved; a launcher `cd` or a copy at the CWD root).
+
+To use the hybrid anyway: set `-glide`, and launch from the game dir so the conf is found:
+`cd ".../drive_c/GOG Games/Interstate 76" && WINEPREFIX=... WINEESYNC=1 WINEMSYNC=1 <engine>/wine i76.exe -glide`
+(full env in the research doc), then let it warm up ~2 min in the menu.
 
 ## Colors: `-gdi` looks darker/more saturated than Windows (renderer difference, not a setting)
 
