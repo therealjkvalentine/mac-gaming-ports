@@ -26,11 +26,16 @@ A few findings along the way that might interest even the Windows folks:
 - The exe has an **undocumented `-gdi` renderer switch** (windowed software blit, added by the
   AiO work). On Wine/Mac this is gold: it avoids DirectDraw exclusive fullscreen entirely,
   which sidesteps Wine's hardcoded minimize-on-focus-loss for fullscreen apps.
-- **dgVoodoo2 works under Wine on Apple Silicon** with three conditions: version ≤2.8.2
-  (2.81+ has an initialization regression under Wine — matches dxvk issue #5217 / wine bug
-  58731), DXVK for the D3D11 backend (wined3d's MoltenVK path refuses FL 10.1), and wrapping
-  Glide only (wrapping DDraw too puts two swapchains in one window and the Mac driver stacks
-  them wrong). Result: hardware-bright 3dfx-gamma colors at 1280x960+, windowed, capped at 20.
+- The shipping config is the game's own Glide renderer through GOG's bundled **OpenGLide**
+  (bright 3dfx-gamma colors, 1280x960 window, instant start). Gotcha that cost us a day: Glide
+  wrappers (OpenGLide *and* dgVoodoo) read their config from the process working directory —
+  launch from the wrong CWD and they default to fullscreen and black-screen.
+- Bonus research: **dgVoodoo2 also works under Wine on Apple Silicon** with three conditions:
+  version ≤2.8.2 (2.81+ has an initialization regression under Wine — matches dxvk issue #5217 /
+  wine bug 58731), DXVK for the D3D11 backend (wined3d's MoltenVK path refuses FL 10.1), and
+  wrapping Glide only (two dgVoodoo swapchains in one window get stacked wrong by the Mac
+  driver). We retired it in the end — OpenGLide is just as bright with none of the shader
+  warmup — but the recipe is documented for anyone who needs dgVoodoo under Wine on a Mac.
 - Mac keyboards send arrow keys as the game's "Grey"/numpad codes, so stock KEYBOARD.MAP
   steering is dead on a Mac — the repo has a one-shot script that swaps the arrow tokens.
 

@@ -1,12 +1,12 @@
 # Interstate '76 (GOG Gold) - Apple Silicon (port in progress)
 
-Status: **Playable on the free stack** (Sikarugir Wine 10, wow64) - windowed, stable, well-behaved
-window, built-in 20 FPS physics limiter. **Default & recommended launch flag: `-gdi`** - it's
-instant, reliable via `open`, and needs no shader warmup. The `-glide` hybrid (dgVoodoo, bright
-hardware colors) works too but carries a ~2-min per-launch shader-compile warmup that this stack
-**cannot cache away** and is fragile via the wrapper (see "The `-glide` hybrid: real but high-friction"
-below). Not a Steam title - GOG release, so no SteamCMD: you supply the game files yourself
-(see [game-data/](game-data/)).
+Status: **Playable on the free stack** (Sikarugir Wine 10, wow64), built-in 20 FPS physics
+limiter. **Default: `-glide`** - the game's own Glide renderer through the GOG-bundled OpenGLide
+(Glide -> OpenGL): bright 3dfx-gamma colors, 1280x960 window, instant start, no shader warmup.
+One quirk: alt-tabbing away minimizes the window (Wine behavior for exclusive-fullscreen apps);
+it auto-restores on refocus. **Fallback: `-gdi`** - small (640x480), darker, but a completely
+normal window with zero quirks. Pick via **I76 Launcher.app** (below). Not a Steam title - GOG
+release, so no SteamCMD: you supply the game files yourself (see [game-data/](game-data/)).
 
 **Disk use (~4.1 GB for a ~470 MB game):** the wrapper is self-contained - Wine engine (~760 MB) +
 the C: drive prefix (~2.8 GB: Windows system DLLs, fonts, registry, the DXVK shader caches) +
@@ -18,108 +18,52 @@ OpenGL), `d3d`, `redline` (software), `powervr`, and an undocumented **`gdi`** (
 blit - added/fixed by the AiO patch). No DirectX 11 anywhere - D3DMetal is irrelevant (set
 `D3DMETAL=0`).
 
-## Why `-gdi` is the default (the fullscreen-minimize saga + hybrid friction)
+## The two modes
 
-`-gdi` runs the whole game (shell + sim) as a **plain 640x480 window with no exclusive anything**.
-It launches correctly via `open` (verified), needs no shader compile, and the built-in 20 FPS
-limiter applies. The software renderer looks period-correct, just darker than the 3dfx path
-(see Colors). This is the reliable daily driver.
+| | **Glide (default)** | **Classic `-gdi` (fallback)** |
+|---|---|---|
+| Renderer | game's Glide -> bundled OpenGLide -> OpenGL | 8-bit software blit |
+| Look | **bright 3dfx-gamma colors, filtered** (matches Windows) | darker, chunkier, period-correct |
+| Window | 1280x960 (the Wine virtual-desktop size) | fixed 640x480 |
+| Start | instant - no shader warmup (plain OpenGL path) | instant |
+| Quirk | **alt-tab minimizes the window; auto-restores on refocus** (Wine's hardcoded behavior for exclusive-fullscreen ddraw apps - the shell holds that mode; mitigations `WindowsFloatWhenInactive=all` + msync are in the recipe) | none - completely normal window |
 
-`-glide` (plain OpenGLide, no dgVoodoo) renders and plays BUT its 2D shell grabs **DirectDraw
-exclusive fullscreen**, and Wine has minimized fullscreen-exclusive windows on focus loss since
-1.7.32 (hardcoded in wined3d - no registry off-switch here; the X11 `UseTakeFocus` workaround
-doesn't exist on winemac). Symptom: the window draws once then vanishes to (-16000,-16000) on
-every focus change - unusable on a Mac. The dgVoodoo hybrid (below) fixes the *color* but not this
-launcher fragility, and adds a warmup - so `-gdi` wins for everyday use.
+**Which mode am I running?** `ps ax | grep i76.exe` shows the flag. Visual tells: bright + big
+window = Glide; dark + small = `-gdi`.
+
+**Window size:** the Glide window tracks the Wine virtual-desktop registry size (recipe step 5;
+default `1280x960` - change `HKCU\Software\Wine\Explorer\Desktops -> i76` and restart). `-gdi`
+is fixed 640x480 (engine limit). **No fullscreen in either mode**: Wine windows don't
+participate in macOS fullscreen (`AXFullScreen` unsupported), and avoid the green zoom button.
+macOS screen zoom (Accessibility) works in a pinch.
+
+**Colors/gamma:** the game itself sets the 3dfx gamma through the Glide API, and OpenGLide
+honors it - that's why Glide mode is bright out of the box. There is no gamma knob in
+`OpenGLid.INI` or the `-gdi` path; use the game's own brightness (Options -> Graphic Detail) to
+taste in either mode.
 
 ## Launching & picking modes (GUI)
 
-Build the chooser app once (or grab it if already built):
+Build the chooser app once:
 ```sh
 osacompile -o "$HOME/Applications/Sikarugir/I76 Launcher.app" I76-Launcher.applescript
 ```
-**I76 Launcher.app** presents: *Classic (instant)* / *Bright Hybrid 2x* / *Bright Hybrid 3x* /
-*Quit running game*. It sets the right flags, fixes the hybrid's working-directory problem
-automatically, and updates the dgVoodoo resolution. CLI equivalents: [`play.sh`](play.sh)
-(classic) and [`play-hybrid.sh`](play-hybrid.sh) (hybrid; pass `2x`/`3x`/`unforced`).
+**I76 Launcher.app** presents *Glide (bright, 1280x960)* / *Classic (small, zero quirks)* /
+*Quit running game* - it sets the wrapper's launch flag and opens it. CLI: [`play.sh`](play.sh)
+launches whatever mode is currently set; flip modes with
+`plutil -replace "Program Flags" -string '-gdi' ~/Applications/Sikarugir/Interstate76.app/Contents/Info.plist`
+(or `'-glide'`).
 
-**Window sizes:** Classic `-gdi` is fixed at 640x480 - an engine limit; there is **no fullscreen**
-(Wine windows don't participate in macOS fullscreen - `AXFullScreen` is unsupported - and the
-green zoom button must be avoided). macOS screen zoom (Accessibility) is the only enlarger.
-The hybrid sim is 1280x960 at `2x`, 1920x1440 at `3x` (menus stay 640x480 in both modes).
+## The dgVoodoo detour (retired - kept for the record)
 
-## What "hybrid" means
-
-One game, two renderers at once. Interstate '76 draws its **2D shell** (menus, briefings,
-Spanner's Cafe) through DirectDraw, and its **3D sim** (the actual driving) through Glide. In
-hybrid mode those take different routes:
-
-- shell/menus -> **Wine's built-in ddraw** (plain, reliable, 640x480)
-- 3D sim -> **dgVoodoo 2.78.2** (Glide -> D3D11) -> **DXVK** -> MoltenVK -> **Metal**, 1280x960+,
-  with the 3dfx gamma-lifted bright colors and `FPSLimit=20`
-
-We wrap only Glide because wrapping DirectDraw too puts two dgVoodoo swapchains in one window,
-which winemac stacks so one hides the other (the black-screen dead end in the research doc).
-
-## The `-glide` hybrid: real but high-friction
-
-The dgVoodoo hybrid (bright 1280x960 hardware Glide - see "dgVoodoo2 upgrade - SOLVED" below)
-genuinely works, but two frictions make it a "when I want the pretty version" option, not the
-default:
-
-1. **~2-min shader warmup every launch, uncacheable on this stack.** The sim's shaders go
-   Glide -> DXVK (SPIR-V) -> MoltenVK (MSL -> Metal pipeline). DXVK's `i76.dxvk-cache` persists the
-   D3D pipeline *state* across launches (so it knows what to build), but **this MoltenVK
-   (2023-era, from the DXVK-async bundle) has no on-disk Metal pipeline cache** - no
-   `MVK_CONFIG_*PIPELINE_CACHE*` env var exists - so the SPIR-V->Metal compile repeats from cold
-   every launch. First playthrough of each session crawls (~0.3-1 fps) while it compiles; then it's
-   smooth; first-seen effects (first explosion) hitch once. Cannot be pre-baked without a newer
-   MoltenVK - see the research doc's "For future research".
-2. **Fragile via `open`.** dgVoodoo reads `dgVoodoo.conf` from the process working directory; the
-   Sikarugir launcher's CWD isn't always the game folder, so the conf is missed, dgVoodoo falls
-   back to its built-in defaults (`FullScreenMode=true`, default OutputAPI) and you get a
-   **fullscreen black window + "Failed to initialize 3D hardware acceleration"**. My earlier
-   working hybrid runs were launched from a shell *inside* the game dir. Making it robust via `open`
-   needs the conf found regardless of CWD (unsolved; a launcher `cd` or a copy at the CWD root).
-
-To use the hybrid anyway: set `-glide`, and launch from the game dir so the conf is found:
-`cd ".../drive_c/GOG Games/Interstate 76" && WINEPREFIX=... WINEESYNC=1 WINEMSYNC=1 <engine>/wine i76.exe -glide`
-(full env in the research doc), then let it warm up ~2 min in the menu.
-
-## Colors: `-gdi` looks darker/more saturated than Windows (renderer difference, not a setting)
-
-The two renderers produce different color, and it's inherent:
-
-- **Windows / OpenGLide `-glide`:** Glide pipeline with the emulated **3dfx gamma lift** (~1.3
-  hardware gamma every 3dfx-era game was tuned around) + bilinear filtering. Bright, correct for
-  daytime SW desert. Our own early Mac `-glide` captures match Windows almost exactly - so the
-  hardware path is faithful; it's specifically `-gdi` that shifts.
-- **Mac `-gdi`:** the 8-bit palettized software renderer. No gamma lift, no filtering -> darker,
-  more saturated, chunkier. This is what we run, because `-glide`'s ddraw exclusive-fullscreen
-  triggers Wine's minimize-on-focus-loss (above).
-
-**dgVoodoo2 upgrade - SOLVED (2026-07-04, second attempt).** The first attempt with dgVoodoo
-2.87.3 dead-ended (crash at first present); the fix turned out to be three conditions at once:
-**dgVoodoo ≤2.8.2** (2.81+ has a Wine-fatal enumeration regression), **DXVK instead of wined3d**
-(swap the engine's `d3d11.dll`/`d3d10core.dll` for the copies in
-`Contents/Frameworks/renderer/dxvk/wine/`), and **wrap Glide only, not DDraw** (two dgVoodoo
-swapchains stack invisibly in one winemac window -> black screen). The shipping config: shell on
-Wine's builtin ddraw, sim on dgVoodoo 2.78.2 Glide -> DXVK -> MoltenVK at 1280x960 windowed,
-`FPSLimit=20` stacked on the exe's own limiter, **bright 3dfx-gamma colors matching the Windows
-build** (screenshot-verified). Full battle log, root causes, and pick-up points:
-[docs/DXGI-DGVOODOO-RESEARCH.md](docs/DXGI-DGVOODOO-RESEARCH.md).
-
-Launch flags are now **`-glide`** (the wrapper is set). The `-gdi` build remains the zero-quirk
-fallback: `plutil -replace "Program Flags" -string '-gdi' .../Interstate76.app/Contents/Info.plist`.
-For brightness, use the game's own in-game setting (Options -> Graphic Detail).
-
-**Which mode am I running?** `ps ax | grep i76.exe` shows the flag (`-glide` or `-gdi`). Visual
-tells: hybrid `-glide` = bright colors, 1280x960 sim window; `-gdi` = darker colors, 640x480.
-
-**Window size:** in `-glide`, the sim size is dgVoodoo's `Resolution` key in the game folder's
-`dgVoodoo.conf` (`2x` = 1280x960, `3x` = 1920x1440, `unforced` = native 640x480) - restart the
-game after changing. In `-gdi` the game draws a fixed 640x480 window (engine limit); use macOS
-screen zoom (Accessibility) if you want it bigger.
+We spent a day making dgVoodoo 2.78.2 + DXVK render the sim (it works - three hard-won
+conditions documented in [docs/DXGI-DGVOODOO-RESEARCH.md](docs/DXGI-DGVOODOO-RESEARCH.md)), then
+retired it: **plain OpenGLide already renders the sim just as bright** (the game sets 3dfx gamma
+via Glide either way), **without** dgVoodoo's ~2-min-per-launch shader warmup (uncacheable on
+this stack: needs a cereal-built MoltenVK *and* a DXVK that persists `VkPipelineCache`) and
+**without** its launch fragility (dgVoodoo reads its conf from the CWD, which `open` gets wrong).
+Net value of dgVoodoo here: zero; the research is preserved because the Wine-DXGI findings are
+reusable and the hybrid is the fallback if the OpenGLide path ever breaks in a future Wine.
 
 Sources: [Wine fullscreen focus-loss behavior](https://forum.winehq.org/viewtopic.php?t=20646),
 [SDL issue on the broken restore](https://github.com/libsdl-org/SDL/issues/5320),

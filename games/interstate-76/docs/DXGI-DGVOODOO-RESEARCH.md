@@ -91,13 +91,23 @@ Both are real and neither is quickly fixable on this exact stack:
    exist, but there is **no `MVK_CONFIG_*PIPELINE_CACHE*` / on-disk Metal binary-archive option**.
    So ~2 min of first-session slideshow while it compiles cold, every launch. (Symptoms match
    exactly: crawl -> smooth -> one-time hitch on first explosion.)
-2. **dgVoodoo.conf is CWD-relative; the wrapper's `open` doesn't cd into the game dir.** Launched
-   via `open Interstate76.app`, dgVoodoo doesn't find `dgVoodoo.conf`, defaults to
-   `FullScreenMode=true` + default OutputAPI, and dies with a fullscreen black window + "Failed to
-   initialize 3D hardware acceleration". Our working hybrid runs were all `cd`-ed into the game dir
-   from a shell. Fix ideas (untried): a `dgVoodoo.conf` copy where the launcher's CWD actually is;
-   a launcher wrapper script that `cd`s first; or check whether dgVoodoo honors a `DGVOODOO_CONF`
-   path / the loading-DLL directory in this version.
+2. **Glide wrappers read their config from the CWD; the Sikarugir launcher's CWD isn't the game
+   dir.** Launched via `open Interstate76.app`, dgVoodoo misses `dgVoodoo.conf` (defaults:
+   `FullScreenMode=true` -> fullscreen black + "Failed to initialize 3D hardware acceleration").
+   **Later confirmed NOT dgVoodoo-specific: plain OpenGLide misses `OpenGLid.INI` the same way**
+   (defaults to fullscreen -> identical fullscreen-black symptom). Any Glide provider must be
+   launched with CWD = game dir; `play.sh` and the I76 Launcher app do exactly that. `-gdi` reads
+   no INI and is immune, so it's the only mode safe to launch via the wrapper's own `open`.
+
+## Postscript: the hybrid was retired (same day)
+
+After all that, plain OpenGLide `-glide` (CWD-fixed) turned out to deliver the same bright
+3dfx-gamma sim - the game sets Glide gamma itself, any honest Glide implementation shows it -
+with **no shader warmup** (direct OpenGL, no DXVK/Metal pipeline compilation) and no dgVoodoo
+version fragility. dgVoodoo+DXVK added a ~2-min uncacheable warmup for zero visual gain here, so
+the shipping config is OpenGLide. Everything above remains valid (a) as the only documented
+dgVoodoo-under-Wine-on-Mac recipe, (b) as the fallback if the OpenGL path breaks in a future
+macOS/Wine, and (c) for the Wine-DXGI findings.
 
 ## For future research (pick-up points, in order of promise)
 
