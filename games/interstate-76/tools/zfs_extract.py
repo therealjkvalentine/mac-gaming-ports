@@ -1,77 +1,100 @@
 #!/usr/bin/env python3
 """Extract Interstate '76 ZFS archives (I76.ZFS, "ZFSF" v1).
 
-Format (reverse-engineered by the Open76 project and That Tony's blog):
-  header: magic "ZFSF" | u32 version(=1) | u32 unk | u32 filesPerDir | u32 numFiles | u32 unk2 | u32 unk3
-  then directory blocks: each block holds `filesPerDir` 24-byte entries followed by
-  a u32 pointer to the next block. Entry:
-    char[16] name (NUL-terminated) | u32 offset | u32 id | u32 length | u32 unk | u8 compression | u24 decompressedLength
-  compression: 0 = stored, 2 = LZO1X, 4 = LZO1Y
+Format (verified against the GOG I76.ZFS byte-by-byte; matches Open76 & That Tony):
+  header (0x1C bytes):
+    char[4]  magic "ZFSF"
+    u32      version (=1)
+    u32      unk (0x10)
+    u32      filesPerDirBlock (100)
+    u32      numFilesTotal
+    u32      unk2
+    u32      unk3
+  directory blocks, first at 0x1C:
+    u32      nextBlockOffset (file offset of the next block, 0/garbage after last)
+    then filesPerDirBlock entries of 36 bytes:
+      char[16] name (NUL-padded, effectively lowercase)
+      u32      dataOffset      (absolute file offset of raw payload)
+      u32      id              (running index)
+      u32      length          (stored/compressed size)
+      u32      timestamp
+      u8       compression     (0 = stored, 2 = LZO1X, 4 = LZO1Y)
+      u24      decompressedLength
+  file payloads sit between/after blocks at their dataOffset.
 
 Usage:
-  zfs_extract.py I76.ZFS out_dir            # extract everything
-  zfs_extract.py I76.ZFS out_dir 'dash'     # only names containing a substring
-  zfs_extract.py I76.ZFS --list             # just list names/sizes/compression
+  zfs_extract.py I76.ZFS --list [substr]
+  zfs_extract.py I76.ZFS OUTDIR [substr]
 """
 import struct, sys, os
 
-def parse_toc(data):
-    magic, version, _unk1, per_dir, total, _u2, _u3 = struct.unpack_from("<4s6I", data, 0)
-    assert magic == b"ZFSF" and version == 1, f"not a ZFSF v1 archive ({magic} v{version})"
-    entries, pos = [], 0x1C
+ENTRY = struct.Struct("<16s4I")   # + 1 byte comp + 3 bytes dlen = 36 total
+HEADER = struct.Struct("<4s6I")
+
+def parse(data):
+    magic, version, _u1, per_dir, total, _u2, _u3 = HEADER.unpack_from(data, 0)
+    if magic != b"ZFSF" or version != 1:
+        sys.exit(f"not a ZFSF v1 archive (magic={magic!r} v{version})")
+    entries, block = [], HEADER.size
     while len(entries) < total:
-        n = min(per_dir, total - len(entries))
-        for i in range(n):
-            off = pos + i * 24
-            name = data[off:off + 16].split(b"\0")[0].decode("ascii", "replace").lower()
-            offset, fid, length, _unk = struct.unpack_from("<4I", data, off + 16)
-            entries.append((name, offset, length))
-        # after a full block of per_dir entries comes a u32 next-block pointer
-        pos = struct.unpack_from("<I", data, pos + per_dir * 24)[0] if n == per_dir else pos
+        next_block = struct.unpack_from("<I", data, block)[0]
+        pos = block + 4
+        for _ in range(min(per_dir, total - len(entries))):
+            raw_name, off, fid, length, _ts = ENTRY.unpack_from(data, pos)
+            comp = data[pos + 32]
+            dlen = int.from_bytes(data[pos + 33:pos + 36], "little")
+            name = raw_name.split(b"\0")[0].decode("ascii", "replace").lower()
+            entries.append((name, off, length, comp, dlen))
+            pos += 36
+        block = next_block
     return entries
 
-def entry_body(data, offset, length):
-    """Entry payload starts with its own small header at `offset`:
-    char[16] name | u32 id | u32 length | u8 compression | u24 decompressedLen, then data."""
-    name = data[offset:offset + 16].split(b"\0")[0].decode("ascii", "replace")
-    fid, ln = struct.unpack_from("<2I", data, offset + 16)
-    comp = data[offset + 24]
-    dlen = int.from_bytes(data[offset + 25:offset + 28], "little")
-    payload = data[offset + 28:offset + 28 + ln]
-    return name, comp, dlen, payload
-
-def lzo1x_decompress(src, dlen):
-    try:
-        import lzo
-        return lzo.decompress(src, False, dlen)
-    except ImportError:
-        sys.exit("compressed entry: pip install python-lzo")
+_lzo = None
+def decompress(payload, comp, dlen):
+    """comp 2 = LZO1X, 4 = LZO1Y - decompressed with liblzo2 (brew install lzo) via ctypes,
+    the same library Open76 P/Invokes."""
+    if comp == 0:
+        return payload
+    global _lzo
+    import ctypes, ctypes.util
+    if _lzo is None:
+        path = (ctypes.util.find_library("lzo2")
+                or "/opt/homebrew/lib/liblzo2.dylib")
+        _lzo = ctypes.CDLL(path)
+    fn = _lzo.lzo1x_decompress_safe if comp == 2 else _lzo.lzo1y_decompress_safe
+    dst = ctypes.create_string_buffer(dlen)
+    out_len = ctypes.c_size_t(dlen)
+    rc = fn(payload, ctypes.c_size_t(len(payload)), dst, ctypes.byref(out_len), None)
+    if rc != 0:
+        raise ValueError(f"lzo rc={rc}")
+    return dst.raw[:out_len.value]
 
 def main():
-    args = [a for a in sys.argv[1:] if a != "--list"]
-    do_list = "--list" in sys.argv
-    zfs = args[0]
-    data = open(zfs, "rb").read()
-    entries = parse_toc(data)
+    argv = sys.argv[1:]
+    do_list = "--list" in argv
+    argv = [a for a in argv if a != "--list"]
+    data = open(argv[0], "rb").read()
+    entries = parse(data)
+    pat = ""
     if do_list:
-        for name, offset, length in entries:
-            _, comp, dlen, _p = entry_body(data, offset, length)
-            print(f"{name:16s} {length:9d} comp={comp} -> {dlen}")
+        pat = argv[1].lower() if len(argv) > 1 else ""
+        for n, o, l, c, d in entries:
+            if pat in n:
+                print(f"{n:16s} {l:9d} comp={c} -> {d}")
         return
-    out, pat = args[1], (args[2].lower() if len(args) > 2 else "")
+    out = argv[1]; pat = argv[2].lower() if len(argv) > 2 else ""
     os.makedirs(out, exist_ok=True)
-    n = 0
-    for name, offset, length in entries:
+    n_ok = n_fail = 0
+    for name, off, length, comp, dlen in entries:
         if pat and pat not in name:
             continue
-        _, comp, dlen, payload = entry_body(data, offset, length)
-        if comp in (2, 4):
-            payload = lzo1x_decompress(payload, dlen)
-        elif comp != 0:
-            print(f"skip {name}: unknown compression {comp}", file=sys.stderr); continue
-        open(os.path.join(out, name), "wb").write(payload)
-        n += 1
-    print(f"extracted {n} files to {out}")
+        try:
+            body = decompress(data[off:off + length], comp, dlen)
+            open(os.path.join(out, name), "wb").write(body)
+            n_ok += 1
+        except Exception as e:
+            print(f"FAIL {name}: {e}", file=sys.stderr); n_fail += 1
+    print(f"extracted {n_ok} files to {out}" + (f" ({n_fail} failed)" if n_fail else ""))
 
 if __name__ == "__main__":
     main()

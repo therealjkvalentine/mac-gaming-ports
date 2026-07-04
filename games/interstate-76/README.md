@@ -49,9 +49,16 @@ build** (screenshot-verified). Full battle log, root causes, and pick-up points:
 [docs/DXGI-DGVOODOO-RESEARCH.md](docs/DXGI-DGVOODOO-RESEARCH.md).
 
 Launch flags are now **`-glide`** (the wrapper is set). The `-gdi` build remains the zero-quirk
-fallback: `plutil -replace "Program Flags" -string '-gdi' .../Interstate76.app/Contents/Info.plist`
-- and [`play-bright.sh`](play-bright.sh) compensates its dark software-renderer look with a held
-display gamma lift (default 1.3, via [`i76gamma.swift`](i76gamma.swift)) while the game runs.
+fallback: `plutil -replace "Program Flags" -string '-gdi' .../Interstate76.app/Contents/Info.plist`.
+For brightness, use the game's own in-game setting (Options -> Graphic Detail).
+
+**Which mode am I running?** `ps ax | grep i76.exe` shows the flag (`-glide` or `-gdi`). Visual
+tells: hybrid `-glide` = bright colors, 1280x960 sim window; `-gdi` = darker colors, 640x480.
+
+**Window size:** in `-glide`, the sim size is dgVoodoo's `Resolution` key in the game folder's
+`dgVoodoo.conf` (`2x` = 1280x960, `3x` = 1920x1440, `unforced` = native 640x480) - restart the
+game after changing. In `-gdi` the game draws a fixed 640x480 window (engine limit); use macOS
+screen zoom (Accessibility) if you want it bigger.
 
 Sources: [Wine fullscreen focus-loss behavior](https://forum.winehq.org/viewtopic.php?t=20646),
 [SDL issue on the broken restore](https://github.com/libsdl-org/SDL/issues/5320),
