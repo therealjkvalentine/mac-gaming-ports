@@ -101,12 +101,18 @@ Both are real and neither is quickly fixable on this exact stack:
 
 ## For future research (pick-up points, in order of promise)
 
-0. **Kill the warmup: newer MoltenVK with a persistent pipeline cache.** MoltenVK gained
-   Metal-binary-archive / serializable `VkPipelineCache` support in later 1.2.x (~1.2.9+) and 1.3.
-   Pairing a newer `libMoltenVK.dylib` (+ matching DXVK-macOS) with a `VkPipelineCache` written to
-   disk would let the SPIR-V->Metal compile persist across launches and largely eliminate the 2-min
-   warmup. Highest-value fix for making the hybrid the daily driver. Verify the env var exists in the
-   candidate dylib first: `strings libMoltenVK.dylib | grep -i pipeline_cache`.
+0. **Kill the warmup: persistent pipeline cache.** (Corrected after reading MoltenVK docs.) The
+   mechanism exists and is the *standard* one: MoltenVK serializes the SPIR-V->MSL conversion
+   result inside `VkPipelineCache` data - **if built with `MVK_USE_CEREAL=1`** ([MoltenVK user
+   guide](https://github.com/KhronosGroup/MoltenVK/blob/main/Docs/MoltenVK_Runtime_UserGuide.md)).
+   On reload it skips the expensive conversion. Two things must both be true, and neither is
+   config-flippable here: (a) the bundled MoltenVK must be a cereal-enabled build (this 2023 one
+   is not, judging by its env-var surface), and (b) **DXVK must write its `VkPipelineCache` to
+   disk and reload it** - stock DXVK relies on driver disk caches (Mesa on Linux) and does not
+   persist the Vulkan-level cache itself. So the fix is a patched stack: cereal-built MoltenVK +
+   a DXVK (or wrapper shim) that serializes the pipeline cache. Note Metal's own system shader
+   cache does not rescue this: the repeated cost is the in-process SPIR-V->MSL conversion, not
+   only the MSL->binary compile.
 
 1. **Real DXGI (untested, staged):** upstream DXVK's x32 `dxgi.dll` (mingw PE from
    [dxvk 1.10.3 release](https://github.com/doitsujin/dxvk/releases/tag/v1.10.3)) can be swapped

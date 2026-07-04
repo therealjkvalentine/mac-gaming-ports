@@ -32,6 +32,35 @@ doesn't exist on winemac). Symptom: the window draws once then vanishes to (-160
 every focus change - unusable on a Mac. The dgVoodoo hybrid (below) fixes the *color* but not this
 launcher fragility, and adds a warmup - so `-gdi` wins for everyday use.
 
+## Launching & picking modes (GUI)
+
+Build the chooser app once (or grab it if already built):
+```sh
+osacompile -o "$HOME/Applications/Sikarugir/I76 Launcher.app" I76-Launcher.applescript
+```
+**I76 Launcher.app** presents: *Classic (instant)* / *Bright Hybrid 2x* / *Bright Hybrid 3x* /
+*Quit running game*. It sets the right flags, fixes the hybrid's working-directory problem
+automatically, and updates the dgVoodoo resolution. CLI equivalents: [`play.sh`](play.sh)
+(classic) and [`play-hybrid.sh`](play-hybrid.sh) (hybrid; pass `2x`/`3x`/`unforced`).
+
+**Window sizes:** Classic `-gdi` is fixed at 640x480 - an engine limit; there is **no fullscreen**
+(Wine windows don't participate in macOS fullscreen - `AXFullScreen` is unsupported - and the
+green zoom button must be avoided). macOS screen zoom (Accessibility) is the only enlarger.
+The hybrid sim is 1280x960 at `2x`, 1920x1440 at `3x` (menus stay 640x480 in both modes).
+
+## What "hybrid" means
+
+One game, two renderers at once. Interstate '76 draws its **2D shell** (menus, briefings,
+Spanner's Cafe) through DirectDraw, and its **3D sim** (the actual driving) through Glide. In
+hybrid mode those take different routes:
+
+- shell/menus -> **Wine's built-in ddraw** (plain, reliable, 640x480)
+- 3D sim -> **dgVoodoo 2.78.2** (Glide -> D3D11) -> **DXVK** -> MoltenVK -> **Metal**, 1280x960+,
+  with the 3dfx gamma-lifted bright colors and `FPSLimit=20`
+
+We wrap only Glide because wrapping DirectDraw too puts two dgVoodoo swapchains in one window,
+which winemac stacks so one hides the other (the black-screen dead end in the research doc).
+
 ## The `-glide` hybrid: real but high-friction
 
 The dgVoodoo hybrid (bright 1280x960 hardware Glide - see "dgVoodoo2 upgrade - SOLVED" below)
