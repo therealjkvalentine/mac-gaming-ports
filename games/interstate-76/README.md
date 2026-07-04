@@ -25,11 +25,36 @@ on a Mac where other apps (especially fullscreen ones on their own Space) consta
 minimize logic never engages, and the window behaves like any Mac window. The software renderer
 at 640x480 looks period-correct and clean; the built-in 20 FPS limiter applies the same.
 
-Upgrade path (untried): dgVoodoo2 inside the wrapper - Glide -> D3D11 windowed
-(`FullScreenMode=false`, `FPSLimit=20`), the exact config verified on Windows. Needs a D3D11
-feature-level 10.1 target over wined3d-GL or DXVK/MoltenVK for a 32-bit exe (D3DMetal is 64-bit
-only). Would restore hardware Glide visuals (filtering, 1280x960, MSAA) while keeping the normal
-window. Sources: [Wine fullscreen focus-loss behavior](https://forum.winehq.org/viewtopic.php?t=20646),
+## Colors: `-gdi` looks darker/more saturated than Windows (renderer difference, not a setting)
+
+The two renderers produce different color, and it's inherent:
+
+- **Windows / OpenGLide `-glide`:** Glide pipeline with the emulated **3dfx gamma lift** (~1.3
+  hardware gamma every 3dfx-era game was tuned around) + bilinear filtering. Bright, correct for
+  daytime SW desert. Our own early Mac `-glide` captures match Windows almost exactly - so the
+  hardware path is faithful; it's specifically `-gdi` that shifts.
+- **Mac `-gdi`:** the 8-bit palettized software renderer. No gamma lift, no filtering -> darker,
+  more saturated, chunkier. This is what we run, because `-glide`'s ddraw exclusive-fullscreen
+  triggers Wine's minimize-on-focus-loss (above).
+
+**dgVoodoo2 upgrade - attempted, DEAD END on this Wine (2026-07-04).** The plan was Glide+DDraw ->
+dgVoodoo -> D3D11 windowed (`FullScreenMode=false`, `FPSLimit=20`) for Windows-identical color in
+a stable window. It gets impressively far: FL10.1 device created, MoltenVK Metal swapchain built
+at 1280x960 - then **hard crash on the first present**, inside dgVoodoo's own code, immediately
+after `IDXGIOutput::WaitForVBlank`, which Wine's DXGI implements as a no-op **stub**. dgVoodoo uses
+the stub's garbage return and faults (`0x79F119BD`). Reproduced over wined3d-GL (fails the FL
+check outright) and DXVK-async/MoltenVK (creates the device, crashes at present) with vsync on/off
+and every PresentationModel - all the same wall. Not tunable; dgVoodoo needs a real DXGI. The
+files were reverted; the working build is plain OpenGLide `-gdi`.
+
+Pragmatic color options that DO work:
+1. **Leave it** - the software look is period-correct, just dimmer than the 3dfx-boosted version.
+2. **Gamma** - the wrapper's `Info.plist` `Gamma Correction` field brightens output (applies
+   while the game runs; it's display-wide, so it's a blunt instrument for a windowed game).
+3. **Path C (stream)** - the Windows box already renders the bright dgVoodoo build; Moonlight from
+   the Mac gets you the exact Windows colors with zero renderer risk.
+
+Sources: [Wine fullscreen focus-loss behavior](https://forum.winehq.org/viewtopic.php?t=20646),
 [SDL issue on the broken restore](https://github.com/libsdl-org/SDL/issues/5320),
 [winemac virtual-desktop limitation](https://forum.winehq.org/viewtopic.php?t=40541).
 
