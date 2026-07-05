@@ -1,14 +1,14 @@
 # Interstate '76 (GOG Gold) - Apple Silicon (port in progress)
 
 Status: **Playable on the free stack** (Sikarugir Wine 10, wow64), built-in 20 FPS physics
-limiter. **One mode:** the game's own Glide renderer through the GOG-bundled OpenGLide
-(Glide -> OpenGL) - bright 3dfx-gamma colors, 1280x960 in-sim window, instant start, no shader
-warmup. **Launch = double-click `Interstate76.app`** (or [`play.sh`](play.sh)); the app's
-executable is our compiled [direct-launch stub](i76-launch-stub.swift), because the stock
-Sikarugir launcher breaks Glide two ways (hardcoded `CX_FWD_COMPAT_GL_CTX=1` crashes OpenGLide's
-legacy GL; wrong CWD hides `OpenGLid.INI`) - and LaunchServices won't run script executables, so
-it's a small Mach-O. Not a Steam title - GOG release, so no SteamCMD: you supply the game files
-yourself (see [game-data/](game-data/)).
+limiter. **One mode: `-gdi`** - the exe's undocumented windowed software renderer. It's the only
+configuration that behaves like a real Mac app: **a normal window with a title bar, draggable,
+instant start, zero quirks**. Looks period-correct (darker than the 3dfx path - use the in-game
+brightness). **Launch = double-click `Interstate76.app`** (or [`play.sh`](play.sh)); the app's
+executable is our compiled [direct-launch stub](i76-launch-stub.swift) - the stock Sikarugir
+launcher injects a GL flag and a wrong CWD that break other renderers, and LaunchServices won't
+run script executables, so it's a small Mach-O. Not a Steam title - GOG release, so no SteamCMD:
+you supply the game files yourself (see [game-data/](game-data/)).
 
 **Disk use (~4.1 GB for a ~470 MB game):** the wrapper is self-contained - Wine engine (~760 MB) +
 the C: drive prefix (~2.8 GB: Windows system DLLs, fonts, registry, the DXVK shader caches) +
@@ -20,36 +20,36 @@ OpenGL), `d3d`, `redline` (software), `powervr`, and an undocumented **`gdi`** (
 blit - added/fixed by the AiO patch). No DirectX 11 anywhere - D3DMetal is irrelevant (set
 `D3DMETAL=0`).
 
-## The window (sizes, moving, fullscreen)
+## The window
 
-- The window is **640x480 during the menus** and **1280x960 in the sim** (the Wine
-  virtual-desktop registry size - change `HKCU\Software\Wine\Explorer\Desktops -> i76` and
-  restart for bigger). On those transitions it may snap back to the screen's top-left; drag it
-  wherever once the sim is up.
-- **Alt-tab minimizes the window; it auto-restores on refocus** (Wine's hardcoded behavior for
-  exclusive-fullscreen ddraw apps; mitigations `WindowsFloatWhenInactive=all` + msync are in the
-  recipe and make the restore reliable).
-- **No fullscreen**: Wine windows don't participate in macOS fullscreen (`AXFullScreen`
-  unsupported), and avoid the green zoom button. macOS screen zoom (Accessibility) in a pinch.
+`-gdi` gives a **normal, movable, title-barred 640x480 window**. The size is an engine limit
+(no INI, no scaling hook); use macOS screen zoom (Accessibility) if you want it bigger. No
+macOS fullscreen (Wine windows don't participate; avoid the green zoom button).
 
-**Colors/gamma:** the game itself sets the 3dfx gamma through the Glide API and OpenGLide honors
-it - bright out of the box, matching Windows. No INI gamma knob exists; fine-tune with the
-game's own brightness (Options -> Graphic Detail).
+**Colors:** the software renderer lacks the 3dfx gamma lift, so it runs darker than the
+Glide/Windows look - the game's own brightness setting (Options -> Graphic Detail) compensates.
 
-**Emergency fallback:** if the Glide path ever breaks, the exe has an undocumented windowed
-software renderer: run `i76.exe -gdi` (darker, fixed 640x480, but a completely normal window
-and immune to every launcher quirk - it reads no INI).
+## The bright Glide paths (parked - here's the honest ledger)
 
-## The dgVoodoo detour (retired - kept for the record)
+Both hardware-look paths work and both failed the daily-driver test. Files for the hybrid are
+still staged in the game folder; switching = changing `-gdi` to `-glide` in the stub source and
+recompiling (instructions in [i76-launch-stub.swift](i76-launch-stub.swift)).
 
-We spent a day making dgVoodoo 2.78.2 + DXVK render the sim (it works - three hard-won
-conditions documented in [docs/DXGI-DGVOODOO-RESEARCH.md](docs/DXGI-DGVOODOO-RESEARCH.md)), then
-retired it: **plain OpenGLide already renders the sim just as bright** (the game sets 3dfx gamma
-via Glide either way), **without** dgVoodoo's ~2-min-per-launch shader warmup (uncacheable on
-this stack: needs a cereal-built MoltenVK *and* a DXVK that persists `VkPipelineCache`) and
-**without** its launch fragility (dgVoodoo reads its conf from the CWD, which `open` gets wrong).
-Net value of dgVoodoo here: zero; the research is preserved because the Wine-DXGI findings are
-reusable and the hybrid is the fallback if the OpenGLide path ever breaks in a future Wine.
+1. **OpenGLide `-glide`** (GOG's bundled wrapper): bright 3dfx colors, instant start - but the
+   game runs DirectDraw exclusive-fullscreen, so the window is **borderless** (no title bar, no
+   handles), snaps position on mode changes, and minimizes on every focus loss (Wine's hardcoded
+   behavior; `WindowsFloatWhenInactive=all` softens it at the cost of other window weirdness).
+2. **dgVoodoo 2.78.2 hybrid** (Glide -> D3D11 -> DXVK -> Metal, windowed): bright AND a real
+   title-barred window at 1280x960 - but pays a **measured ~70-second in-mission crawl per
+   session** while shaders compile, even with DXVK async pipeline compilation confirmed active
+   (12 threads) and MoltenVK concurrent compilation on. Session log: 0.2-0.4 fps for 69s, then a
+   snap to the full 20 fps cap. The compile cost lives in MoltenVK's SPIR-V->MSL conversion,
+   which this stack cannot persist (see the research doc's "kill the warmup" item for exactly
+   what a future MoltenVK/DXVK pairing needs).
+
+Full battle log, root causes (incl. the three-condition dgVoodoo-under-Wine recipe and the
+Sikarugir launcher's Glide-fatal `CX_FWD_COMPAT_GL_CTX=1`):
+[docs/DXGI-DGVOODOO-RESEARCH.md](docs/DXGI-DGVOODOO-RESEARCH.md).
 
 Sources: [Wine fullscreen focus-loss behavior](https://forum.winehq.org/viewtopic.php?t=20646),
 [SDL issue on the broken restore](https://github.com/libsdl-org/SDL/issues/5320),

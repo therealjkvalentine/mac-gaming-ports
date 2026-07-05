@@ -115,6 +115,18 @@ Two implementation traps for future porters: LaunchServices on macOS 26 silently
 scripts as bundle executables (must be Mach-O), and `codesign --deep` chokes on the
 `launcher`/`wineskinlauncher` symlinks - sign just the new executable ad-hoc instead.
 
+## Postscript 3: async measured — the warmup is real and survives every knob (final verdict)
+
+The bundled DXVK is async-capable but **async is opt-in and was off during all earlier tests**
+(`dxvk.enableAsync = true` in `dxvk.conf` / `DXVK_ASYNC=1`). With async confirmed active
+("Using 12 async compiler threads") plus `MVK_CONFIG_SHOULD_MAXIMIZE_CONCURRENT_COMPILATION=1`,
+a real play session still measured **69 seconds at 0.2-0.4 fps after mission start, then a snap
+to the full 20 fps cap**. The bottleneck is per-pipeline SPIR-V->MSL conversion + Metal compile
+inside MoltenVK under Rosetta, which nothing at config level can persist or hide (async skips
+draws but this game's first frames need nearly every pipeline). Conclusion: the hybrid is
+parked; `-gdi` ships. The fix remains item 0 below (cereal-built MoltenVK + a DXVK that
+serializes `VkPipelineCache`).
+
 ## Postscript: the hybrid was retired (same day)
 
 After all that, plain OpenGLide `-glide` (CWD-fixed) turned out to deliver the same bright
