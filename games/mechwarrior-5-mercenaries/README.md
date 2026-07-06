@@ -37,6 +37,17 @@ In `.../MW5Mercs/Mods/`, enabled in `modlist.json`:
   **moving its folder out**, not just `bEnabled:false`. "Enable Infantry" (PGI_Infantry, v1.1) crashes
   on v1.13 - keep it out of `Mods/`.
 
+## Save editing (mechs, weapons, C-bills)
+MW5 campaign saves are plain uncompressed Unreal Engine 4 property serialization, so they edit
+cleanly with a small Python script - no Windows save-editor GUI under Wine. The one good editor
+([wmtorode/MW5-SaveEditor](https://github.com/wmtorode/MW5-SaveEditor)) is a source-less
+PyInstaller `.exe`; we unpack it once to recover its serialization library, then drive that
+headless from macOS - and prove a no-op load->save is byte-identical before trusting it.
+Full method (rebuild steps, the two decompiler-artifact fixes, tier/Clan naming, DLC gating):
+[docs/SAVE-EDITING.md](docs/SAVE-EDITING.md). Reusable driver:
+[tools/mw5_save_edit.py](tools/mw5_save_edit.py). Quit MW5 and back up `SaveGames/` first;
+combine with SimpleCheatMod's omni/tiny weapon slots to field anything you add.
+
 ## LAN co-op (offline, no internet)
 MW5 has 4-player co-op. With Goldberg it can run over a LAN (one router, no internet) among owned copies:
 each machine needs the same build + mods, Goldberg with a unique identity, the same subnet/port, and
