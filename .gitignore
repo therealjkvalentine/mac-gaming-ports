@@ -12,3 +12,5 @@ prefix/
 # Decoded/derived game art for local experiments (copyrighted; tools rebuild it)
 games/*/texture-lab/*
 !games/*/texture-lab/README.md
+# Personal save-game backups (binary save data; never commit)
+mw5-save-backups/
