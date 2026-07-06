@@ -1,14 +1,18 @@
 # Interstate '76 (GOG Gold) - Apple Silicon (port in progress)
 
 Status: **Playable on the free stack** (Sikarugir Wine 10, wow64), built-in 20 FPS physics
-limiter. **One mode: `-gdi`** - the exe's undocumented windowed software renderer. It's the only
-configuration that behaves like a real Mac app: **a normal window with a title bar, draggable,
-instant start, zero quirks**. Looks period-correct (darker than the 3dfx path - use the in-game
-brightness). **Launch = double-click `Interstate76.app`** (or [`play.sh`](play.sh)); the app's
-executable is our compiled [direct-launch stub](i76-launch-stub.swift) - the stock Sikarugir
-launcher injects a GL flag and a wrong CWD that break other renderers, and LaunchServices won't
-run script executables, so it's a small Mach-O. Not a Steam title - GOG release, so no SteamCMD:
-you supply the game files yourself (see [game-data/](game-data/)).
+limiter. **Default: DxWnd** - the GPLv3 DirectDraw wrapper runs the game's software renderer in a
+**big, scalable, title-barred, draggable window** (fills the screen; the plain `-gdi` window was
+locked to 640x480). **Launch = double-click `Interstate76.app`**: the app's compiled
+[launch stub](i76-launch-stub.swift) runs `dxwnd.exe /R:1 /q`, which headlessly applies the
+DirectDraw hooks, launches the game with our tuned [profile](interstate-76.dxw), sits in the tray,
+and self-terminates when the game exits. One-time install of DxWnd into the wrapper:
+[`setup-dxwnd.sh`](setup-dxwnd.sh). Not a Steam title - GOG release, so no SteamCMD: you supply the
+game files yourself (see [game-data/](game-data/)).
+
+The stub exists because the stock Sikarugir launcher injects a GL flag and a wrong CWD that break
+the renderers, and LaunchServices won't run script bundle executables - so it's a small Mach-O
+(original launcher kept as `Sikarugir.orig`).
 
 **Disk use (~4.1 GB for a ~470 MB game):** the wrapper is self-contained - Wine engine (~760 MB) +
 the C: drive prefix (~2.8 GB: Windows system DLLs, fonts, registry, the DXVK shader caches) +
@@ -20,11 +24,29 @@ OpenGL), `d3d`, `redline` (software), `powervr`, and an undocumented **`gdi`** (
 blit - added/fixed by the AiO patch). No DirectX 11 anywhere - D3DMetal is irrelevant (set
 `D3DMETAL=0`).
 
-## The window
+## DxWnd: the default (big scalable window)
 
-`-gdi` gives a **normal, movable, title-barred 640x480 window**. The size is an engine limit
-(no INI, no scaling hook); use macOS screen zoom (Accessibility) if you want it bigger. No
-macOS fullscreen (Wine windows don't participate; avoid the green zoom button).
+DxWnd wraps the game's DirectDraw output so the 640x480 software render is scaled into a normal
+resizable window. Setup once with [`setup-dxwnd.sh`](setup-dxwnd.sh) (downloads DxWnd, installs
+our profile). The profile ([interstate-76.dxw](interstate-76.dxw), the DxWnd author's own I76
+profile adapted to our paths) is frozen at:
+
+- **Main tab:** Run in Window, Early hook, `Terminate on window close` (so closing the window
+  quits cleanly - without it you must force-quit), window 1280x960 at X,Y (50,50).
+- **Hook tab:** `Injection = Inject DLL` (the mouse is correct at this setting; the research's
+  "SetWindowsHook causes mouse offset -> use Inject suspended" note does NOT apply here).
+- **Video tab:** thick frame (gives the title bar + handles), Floating, SD 4:3.
+- **DirectX tab:** `Renderer = primary surface` (avoids black menus/cutscenes). Caveat: DxWnd's
+  author flags this renderer as leaking GDI handles over long sessions - watch for gradual
+  slowdown on marathon runs; restart the game if it creeps.
+
+**Headless launch:** `dxwnd.exe /R:1 /q` (1-based index; the parser does `iProgIndex-1` so `/R:1`
+= ini target 0 - this is why an earlier `/r:0` only opened the GUI). To open the DxWnd GUI to
+change settings instead, run `dxwnd.exe` with no args and **right-click the "Interstate 76" row ->
+Modify** (double-clicking the row *runs* the game).
+
+**Emergency fallback** (if DxWnd ever breaks): the exe's own windowed software renderer,
+`i76.exe -gdi` - a normal but fixed 640x480 window, immune to every launcher quirk (reads no INI).
 
 **Colors:** the software renderer lacks the 3dfx gamma lift, so it runs darker than the
 Glide/Windows look - the game's own brightness setting (Options -> Graphic Detail) compensates.
