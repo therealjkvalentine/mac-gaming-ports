@@ -124,9 +124,13 @@ Community consensus cap = **20 FPS** (24-25 ok, 30 = loose ceiling).
 
 - On Windows this was fixed with dgVoodoo2 `FPSLimit = 20` - verified across ~40 min of melee +
   campaign play, zero crashes. Config in [docs/WHAT-THIS-IS-dgvoodoo.txt](docs/WHAT-THIS-IS-dgvoodoo.txt).
-- On macOS there is **no verified equivalent limiter** - that is the entire challenge of this port.
+- On macOS **no external limiter is needed**: the GOG exe's own `I76PATCH.DLL` cap holds under
+  Wine. **Confirmed in-sim (2026-07-04): ~20.66 FPS measured from the session log, physics limiter
+  working** - this is what closed out "the challenge of the port." The cap is inside the exe on
+  every platform (see the discovery section above), and `-gdi` inherits it for free.
 
-Do not campaign uncapped. Verify the cap first (checklist below).
+Still: don't campaign uncapped if you swap renderers. The cap is verified for the shipping `-gdi`
+mode; re-check it (checklist below) if you switch to a Glide path or a different build.
 
 ## The paths (from the handoff research)
 
