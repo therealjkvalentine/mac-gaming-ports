@@ -34,3 +34,10 @@ p.arguments = ["C:\\dxwnd\\dxwnd.exe", "/R:1"]
 p.currentDirectoryURL = URL(fileURLWithPath: A + "/Contents/SharedSupport/prefix/drive_c/dxwnd")
 try! p.run()
 p.waitUntilExit()
+// Reap the whole Wine session so nothing lingers after the game quits (fixes the
+// "doesn't close when I close it" bug: wineserver + winedevice + explorer + services
+// are separate processes that outlive dxwnd/the game unless explicitly killed).
+let kill = Process()
+kill.executableURL = URL(fileURLWithPath: A + "/Contents/SharedSupport/wine/bin/wineserver")
+kill.arguments = ["-k"]
+try? kill.run(); kill.waitUntilExit()
