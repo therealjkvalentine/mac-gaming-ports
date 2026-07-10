@@ -53,12 +53,14 @@ Verified findings:
   forced resolution, dgVoodoo sizes the game window to the forced res — we use
   `Resolution = 3x` (640x480 → 1920x1440, an exact integer fit for a 1440-high
   display; pick your own multiple). Verified pixel-correct 4:3 for menus and sim.
-- **dgVoodoo true fullscreen is hazardous on displays without a matching mode.**
-  Our 3440x1440 panel has no 1920x1440 mode; dgVoodoo mode-switched to 1920x1080
-  (wrong aspect) and knocked the display out of the Windows desktop topology
-  entirely (needed a physical replug). We disable Alt+Enter in the conf. If you
-  want a fullscreen *look*, use Lossless Scaling's borderless overlay (§2) or
-  dgVoodoo's `fullscreenAttributes = fake`.
+- **dgVoodoo true fullscreen is just worse here, not dangerous.** On a display
+  with no 1920x1440 mode, dgVoodoo mode-switches to the nearest real mode
+  (1920x1080 on our 3440x1440 panel = wrong aspect; the display may blank
+  momentarily during the switch — an earlier draft of this report over-read
+  that as a broken desktop topology; it wasn't, the monitor had simply turned
+  off). For a fullscreen *look*, use Lossless Scaling's borderless overlay
+  (§2) or dgVoodoo's `fullscreenAttributes = fake`; windowed remains the
+  verified recommendation.
 - **Wrap DirectDraw too.** The 2D shell (menus, cutscenes, "PLEASE STAND BY") is
   DirectDraw, not Glide. Dropping dgVoodoo's `DDraw.dll` + `D3DImm.dll` beside the
   exe gives menus the same 3x upscale. One gotcha: in windowed mode the DDraw
@@ -99,6 +101,31 @@ result.**
   though dgVoodoo presents real D3D11, so a manual profile on a 40/50-series card
   is an *untested but plausible* experiment), AMD AFMF (Radeon only), SVP (video
   players only).
+
+**Is there an open-source alternative we could bundle instead of a paid app?**
+Surveyed 2026-07-10 — not yet, but the door is open:
+
+- [Magpie](https://github.com/Blinue/Magpie) (the best OSS windowed-game overlay,
+  great for upscaling) explicitly has **no frame generation** and no plans for it.
+- AMD's FSR3 frame gen is open source but needs engine-supplied motion vectors
+  and depth — a wrapped 1997 Glide game has neither; same reason
+  [OptiScaler](https://github.com/cdozdil/OptiScaler)-style injection can't help here.
+- [metantonio/free-lossless](https://github.com/metantonio/free-lossless) is an
+  embryonic (2-star, no releases) but architecturally correct OSS attempt:
+  screen capture → RIFE interpolation (DirectML) → transparent overlay. Proof
+  the shape is buildable; not yet something to ship.
+- Another OSS LS alternative was [announced on Reddit in 2026](https://en.gamegpu.com/news/zhelezo/otkrytaya-alternativa-lossless-scaling-skoro-poyavitsya-na-github)
+  (scaling + frame gen) but has no public repo yet.
+- The serious ingredients all exist as mature OSS:
+  [rife-ncnn-vulkan](https://github.com/nihui/rife-ncnn-vulkan) (Vulkan RIFE,
+  runs on any GPU), Windows Graphics Capture, and DXGI overlay presentation.
+  **I76 is actually the easy case for a bespoke tool**: a fixed 20 FPS base
+  means trivial frame pacing — capture pairs, interpolate one midpoint, present
+  at a rock-solid 40. No adaptive timing, no VRR headaches. A minimal
+  "i76-smooth" (or general "fixed-rate retro smoother") is a realistic
+  community project; the open question is whether RIFE at 1920x1440 fits the
+  50 ms budget on low-end GPUs (reduced flow resolution likely needed). See
+  Open problems.
 
 ## 3. Force feedback
 
@@ -339,6 +366,13 @@ Ordered by leverage; contributions welcome.
    [Roanish/i76](https://github.com/Roanish/i76) (their REVERSING.md lacks M16)
    and the Open76 fork; both render vehicles and could consume enhanced art
    directly.
+8. **An OSS frame smoother for fixed-rate retro games** — no shippable
+   open-source Lossless Scaling equivalent exists (see §2), but I76's fixed
+   20 FPS base makes it the easiest possible target: WGC capture → RIFE
+   ([rife-ncnn-vulkan](https://github.com/nihui/rife-ncnn-vulkan)) midpoint →
+   borderless overlay at 40. Benchmark RIFE-lite at 1920x1440 on low-end
+   Vulkan GPUs; if the 50 ms budget holds, this kills the last paid dependency
+   in the stack.
 
 ## 8. Methodology
 

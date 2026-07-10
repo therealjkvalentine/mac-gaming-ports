@@ -28,6 +28,11 @@ def read_act(path):
     assert len(d) >= 768, f"{path}: not an ACT palette"
     return [tuple(d[i*3:i*3+3]) for i in range(256)]
 
+def encode_map(indices, w, h):
+    """Inverse of decode_map: raw u32 w, u32 h, then w*h palette-index bytes - no
+    VQM tiling/codebook. `indices` from quantize_to_palette (0xFF = transparent)."""
+    return struct.pack("<2I", w, h) + bytes(indices)
+
 def decode_map(d, pal):
     w, h = struct.unpack_from("<2I", d, 0)
     px = d[8:8 + w*h]

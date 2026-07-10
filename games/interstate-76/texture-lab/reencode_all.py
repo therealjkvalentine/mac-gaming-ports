@@ -48,6 +48,9 @@ for rec in manifest:
                 enh = enhanced_rgba(e["staged"], e["w"], e["h"])
                 if e["ext"] == ".m16":
                     v = i76img.encode_m16(enh.tobytes(), e["w"], e["h"], e["flags"] or 0)
+                elif e["ext"] == ".map":
+                    idx = i76img.quantize_to_palette(enh.tobytes(), e["w"], e["h"], pal)
+                    v = i76img.encode_map(idx, e["w"], e["h"])
                 else:  # .vqm
                     idx = i76img.quantize_to_palette(enh.tobytes(), e["w"], e["h"], pal)
                     cbk_name = os.path.splitext(rec["pak"])[0].upper()[:8] + ".CBK"

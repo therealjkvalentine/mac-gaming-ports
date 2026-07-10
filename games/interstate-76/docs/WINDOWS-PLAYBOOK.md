@@ -8,7 +8,7 @@ found and they're experiments, not guarantees.*
 > **Results are in:** the playbook below was executed 2026-07-09 — see
 > [FINDINGS-2026-07-WINDOWS-AND-TEXTURES.md](FINDINGS-2026-07-WINDOWS-AND-TEXTURES.md)
 > for what's verified (dgVoodoo recipe, LSFG 20→40, M16 format crack, texture pipeline),
-> what's dead (wrapper-level replacement, fullscreen on modeless displays), and what's open.
+> what's dead (wrapper-level texture replacement), and what's open.
 >
 > **Scripted:** [`setup-windows.ps1`](../setup-windows.ps1) automates §1 plus the input.map
 > fixes (§4): retires GOG's OpenGLide, deploys dgVoodoo2 x86 Glide DLLs, installs
