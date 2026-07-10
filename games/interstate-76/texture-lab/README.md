@@ -48,6 +48,26 @@ model crisps edges but speckles tiny gauge text; try `realesrgan-x4plus-anime`, 
 model zoo, or SD img2img at low denoise for better results. Enhance at 4x, then downsample
 back to the original size (the engine can't take bigger files - see the research doc).
 
+## The blend recipe (2026-07-10): 40% original / 35% ESRGAN / 25% sharpened
+
+Pure ESRGAN softens fine detail — worst case, it *erases* the radar CRT range
+rings (reads them as noise). The game-wide fix is a per-tile blend, dialled in
+with the interactive tuner (`build_tuner.py`):
+
+- **40% original** — keeps the faithful detail (range rings, gauge text, panel grit)
+- **35% ESRGAN** — the cleanup (removes dither, smooths metal gradients)
+- **25% sharpened** — ESRGAN + *luminance-only* unsharp (crisp edges with **no**
+  blue/colour fringing on saturated edges like the hazard stripes / red HUD bars)
+
+`reencode_all.py` applies this when given the staging dir as a 5th arg:
+```sh
+python reencode_all.py manifest.json ENHANCED/ ASSETS/ OUT/ STAGING/   # blended
+python reencode_all.py manifest.json ENHANCED/ ASSETS/ OUT/            # pure ESRGAN
+```
+Weights + sharpen live in constants at the top of `reencode_all.py`. The tuner
+(`build_tuner.py` -> a self-contained HTML page with live sliders) is how you
+re-dial them; it embeds copyrighted game art so its OUTPUT is never committed.
+
 ## Vehicle skins on Windows (2026-07-09): the M16/hardware path — WORKING
 
 Proven in-game on the Windows laptop (`-glide` + dgVoodoo): **the hardware renderer loads

@@ -1,42 +1,79 @@
 #!/usr/bin/env python3
-"""Phase 3: rebuild every pak/loose-file from the manifest using ENHANCED tiles
-(phase 2's upscaled staging folder, same filenames, any resolution - we resample
-back to the ORIGINAL w/h, which is the engine's hard ceiling).
+"""Phase 3: rebuild every pak/loose-file from the manifest.
 
-VQM re-encode: quantizes to t01.act (this repo's existing convention - see
-texture-lab/README) and writes a fresh PRIVATE codebook per source pak (never
-touches shared originals - HD-TEXTURES-RESEARCH.md's rule).
-M16 re-encode: fresh per-tile RGB565 palette - no quantization loss at all.
-MAP re-encode: quantizes to t01.act, output is a plain .map (no pak needed).
+Per tile, the final native-resolution pixels are a BLEND of three layers (the
+recipe James dialled in with the dashboard tuner, applied game-wide):
+    BLEND_ORIG   * original           (faithful detail: radar rings, text, dither)
+  + BLEND_ESRGAN * esrgan_downscaled  (Real-ESRGAN x4 -> Lanczos to native: cleanup)
+  + BLEND_SHARP  * sharpened          (esrgan + luminance-only unsharp: crisp edges,
+                                       no colour fringing)
+Sharpen is luminance-only so saturated edges (hazard stripes, red bars) don't blue-
+fringe. All at native w/h - the engine's hard ceiling. If STAGING_DIR is omitted the
+script falls back to pure-ESRGAN (the old behaviour).
 
-Usage: python reencode_all.py MANIFEST.json ENHANCED_STAGING_DIR ASSETS_DIR OUT_DIR
+VQM re-encode: quantizes to t01.act + a fresh PRIVATE codebook per pak.
+M16 re-encode: fresh per-tile RGB565 palette (no quantization loss).
+MAP re-encode: quantizes to t01.act, output is a plain .map.
+
+Usage: python reencode_all.py MANIFEST.json ENHANCED_DIR ASSETS_DIR OUT_DIR [STAGING_DIR]
 """
 import os, sys, json, struct, time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools"))
 import i76img
-from PIL import Image
+from PIL import Image, ImageFilter
+import numpy as np
 
 manifest_path, enhanced_dir, assets, outdir = sys.argv[1:5]
+staging_dir = sys.argv[5] if len(sys.argv) > 5 else None   # enables the blend
 os.makedirs(outdir, exist_ok=True)
 manifest = json.load(open(manifest_path))
 pal = i76img.read_act(os.path.join(assets, "t01.act"))
 t0 = time.time()
 
-_enh_cache = {}
-def enhanced_rgba(staged_name, w, h):
-    im = _enh_cache.get(staged_name)
-    if im is None:
-        path = os.path.join(enhanced_dir, staged_name)
-        if not os.path.exists(path):
-            path = os.path.join(enhanced_dir, staged_name.replace(".png", "_out.png"))
-        im = Image.open(path)
-        _enh_cache[staged_name] = im
-        if len(_enh_cache) > 64:  # bound memory; PIL lazy-loads so this is cheap anyway
-            _enh_cache.pop(next(iter(_enh_cache)))
-    if im.size != (w, h):
+# --- the recipe (James, 2026-07-10) ---
+BLEND_ORIG, BLEND_ESRGAN, BLEND_SHARP = 0.40, 0.35, 0.25
+SHARP_PCT, SHARP_RADIUS = 55, 1.0
+
+def _load(dir_, staged, w, h, resize):
+    path = os.path.join(dir_, staged)
+    if not os.path.exists(path):
+        path = os.path.join(dir_, staged.replace(".png", "_out.png"))
+    im = Image.open(path)
+    if resize and im.size != (w, h):
         im = im.resize((w, h), Image.LANCZOS)
-    return im.convert("RGBA")
+    return im
+
+def _lum_unsharp(rgb):
+    y, cb, cr = rgb.convert("YCbCr").split()
+    y = y.filter(ImageFilter.UnsharpMask(radius=SHARP_RADIUS, percent=SHARP_PCT, threshold=1))
+    return Image.merge("YCbCr", (y, cb, cr)).convert("RGB")
+
+_cache = {}
+def enhanced_rgba(staged_name, w, h):
+    """Final native RGBA for a tile: 40/35/25 blend if staging available, else pure ESRGAN."""
+    key = (staged_name, w, h)
+    out = _cache.get(key)
+    if out is not None:
+        return out
+    esr = _load(enhanced_dir, staged_name, w, h, resize=True).convert("RGB")
+    if staging_dir is None:
+        out = esr.convert("RGBA")
+    else:
+        orig = _load(staging_dir, staged_name, w, h, resize=True)          # native, has alpha
+        alpha = orig.getchannel("A") if orig.mode == "RGBA" else None
+        sharp = _lum_unsharp(esr)
+        a = np.asarray(orig.convert("RGB"), np.float32)
+        b = np.asarray(esr, np.float32)
+        c = np.asarray(sharp, np.float32)
+        mix = (BLEND_ORIG * a + BLEND_ESRGAN * b + BLEND_SHARP * c).clip(0, 255).astype(np.uint8)
+        out = Image.fromarray(mix, "RGB").convert("RGBA")
+        if alpha is not None:
+            out.putalpha(alpha)                                            # keep original transparency
+    if len(_cache) > 96:
+        _cache.pop(next(iter(_cache)))
+    _cache[key] = out
+    return out
 
 n_done = n_err = 0
 for rec in manifest:

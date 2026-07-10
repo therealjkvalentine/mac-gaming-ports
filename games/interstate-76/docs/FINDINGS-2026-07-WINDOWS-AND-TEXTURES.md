@@ -75,6 +75,36 @@ Verified findings:
 - Boot is 60–75 s of "PLEASE STAND BY"; ESC (sometimes twice) skips. The boot
   phase runs as a borderless fullscreen-size popup that **minimizes on focus
   loss** — restore it and it settles into the proper titled window.
+- **GOG Galaxy build warning (checked 2026-07-10):** a fresh Galaxy install of
+  Interstate '76 delivers the **2017 exe** (`9a232dcc...`) — *not* the 2019
+  AiO-merged exe (`60abf7bc...`) that offline-installer-era copies have. Assets
+  (`I76.ZFS`) are byte-identical; only the exe lineage differs. Check your MD5;
+  if you're on `9a232dcc`, apply
+  [UCyborg's AiO patch](https://www.vogons.org/viewtopic.php?t=68384).
+  (Also: `I76PATCH.DLL` was present in neither install here — with dgVoodoo the
+  `FPSLimit = 20` conf line carries the cap, verified live by the LS `20/40`
+  counter.) The Galaxy install's genuinely useful extras: `Manual.pdf` and
+  GOG's official multi-res `goggame-*.ico`.
+
+### 1.1 The Nitro Pack runs with the identical recipe (verified 2026-07-10)
+
+GOG ships the Nitro Pack as a **standalone game** (own `nitro.exe`, 68 MB
+`nitro.zfs` + XOR-encrypted `nitro.zix`, own missions/music/FFB files, registry
+key `ACTIVISION\Interstate '76 Nitro Pack` with `FTP=I76NITW95`). Same engine,
+same renderer tokens (`glide`, `gdi`, `d3d`, `redline`, `powervr`). Deployment
+transfers verbatim:
+
+- Retire its bundled OpenGLide: `glide.dll`, `glide2x.dll`, `glide2x.ovl` only.
+  **Do not touch `z*.dll`** (`zglide.dll`, `zredline.dll`, …) — those are the
+  engine's renderer modules, not wrappers.
+- Drop in dgVoodoo x86 `Glide*.dll` + `DDraw.dll`/`D3DImm.dll` + the same
+  `dgVoodoo.conf` (the 20 FPS cap matters here too — no built-in limiter).
+- Launch `nitro.exe -glide`. Verified: boots and renders the Nitro Riders
+  intro through dgVoodoo, same boot-phase popup behavior as the base game.
+- Its GOG `input.map` is **clean** (no phantom joystick5 — that packaging bug
+  is base-game-only); mouse/pad additions apply the same way.
+- Music note: the GOG Nitro build ships `audiere.dll` for playback (base game
+  uses the `goggame.dll` MCI shim) — in-mission music unverified so far.
 
 ## 2. Frame smoothing
 
@@ -136,9 +166,17 @@ there's a 2024 report that the GOG build's FFB just works.**
   copying `HKLM\...\ACTIVISION\Interstate'76FRC` → `Interstate '76` to wake the
   Gold Edition's dormant Nitro-Pack FFB code. **This presumes the GOG installer
   wrote those keys.** A portable/zip install has *no* ACTIVISION keys at all, so
-  the `reg copy` fails even elevated — there is nothing to copy. If you need the
-  keys, export them from a machine where the GOG installer ran, or run the
-  installer once.
+  the `reg copy` fails even elevated — there is nothing to copy.
+- **SOLVED (observed 2026-07-10, GOG Galaxy install):** GOG's installer writes
+  the **un-suffixed key directly** —
+  `HKLM\SOFTWARE\WOW6432Node\ACTIVISION\Interstate '76` containing just
+  `EXE = i76.exe`. No `Interstate'76FRC` key exists at all on a GOG install.
+  That's the whole mystery: the PCGW rename hack is CD-era; on GOG the key is
+  pre-enabled, which is why FFB "just works" there. For zip installs, *create*
+  the minimal key —
+  [`enable-force-feedback.bat`](../enable-force-feedback.bat) now does this
+  automatically when no FRC source exists. The key is machine-wide (HKLM), so
+  one run covers every copy of the game on the box.
 - **Third route (untested): the original Force Feedback Patch v1.083** is still
   hosted on [Local Ditch's downloads page](https://www.localditch.com/interstate-76/downloads/)
   — the era installer that added FRC support to retail installs. Running it (or
@@ -377,6 +415,14 @@ the Nitro Pack from the GOG library alongside — same dgVoodoo recipe applies.
   (mirrored on the [GOG forum](https://www.gog.com/forum/interstate_series/simple_stepbystep_instructions_for_running_interstate_76_with_hardware_acceleration_using_dgvood/page1))
 - Multiplayer lives: community server **glenrio.interstate76.com**, weekly
   Tuesday sessions (AiO fixes the netcode/UPnP)
+- [DxWnd forum: Interstate '76 Arsenal thread](https://sourceforge.net/p/dxwnd/discussion/general/thread/8af4850d/)
+  — the DxWnd-route war stories: Smacker FMV vs. flip-emulation trade-offs,
+  white-flicker HUD blocks, and a **Nitro-specific menu mouse Y-offset bug**
+  after missions (independent corroboration of the internal-640x480 hit-test
+  behavior we mapped in §8).
+- [Paul the Tall: I76 Arsenal on Mac](https://www.paulthetall.com/interstate-76-arsenal-mac/)
+  — the 2013-era Mac route (CrossOver/Porting Kit CrossTie). Prior art for this
+  repo's free Sikarugir/Wine-10 port (see the repo README for the modern recipe).
 
 ## 7. Open problems
 
