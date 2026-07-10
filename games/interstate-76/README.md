@@ -1,18 +1,46 @@
-# Interstate '76 (GOG Gold) - Apple Silicon (port in progress)
+# Interstate '76 (GOG Gold) - Apple Silicon
 
-Status: **Playable on the free stack** (Sikarugir Wine 10, wow64), built-in 20 FPS physics
-limiter. **Default: DxWnd** - the GPLv3 DirectDraw wrapper runs the game's software renderer in a
-**big, scalable, title-barred, draggable window** (fills the screen; the plain `-gdi` window was
-locked to 640x480). **Launch = double-click `Interstate76.app`**: the app's compiled
-[launch stub](i76-launch-stub.swift) runs `dxwnd.exe /R:1 /q`, which headlessly applies the
-DirectDraw hooks, launches the game with our tuned [profile](interstate-76.dxw), sits in the tray,
-and self-terminates when the game exits. One-time install of DxWnd into the wrapper:
-[`setup-dxwnd.sh`](setup-dxwnd.sh). Not a Steam title - GOG release, so no SteamCMD: you supply the
-game files yourself (see [game-data/](game-data/)).
+Status: **Playable on the free stack** (Sikarugir Wine 10, wow64) — fullscreen-4:3 window,
+in-mission music, clean quit, built-in 20 FPS physics limiter, all verified in play. Not a Steam
+title - GOG release, so no SteamCMD: you supply the game files yourself (see
+[game-data/](game-data/)). **New here? Read [docs/VERIFIED-FIXES.md](docs/VERIFIED-FIXES.md)
+first** — every symptom→cause→fix from this port in one table.
 
-The stub exists because the stock Sikarugir launcher injects a GL flag and a wrong CWD that break
-the renderers, and LaunchServices won't run script bundle executables - so it's a small Mach-O
-(original launcher kept as `Sikarugir.orig`).
+## The three launchers
+
+Built/installed by [`build-launchers.sh`](build-launchers.sh) into `~/Applications/Sikarugir/`:
+
+| App | What it is |
+|---|---|
+| **`Interstate76.app`** | **The daily driver.** DxWnd wraps the software renderer into a big screen-filling 4:3 window (black bars, title bar, draggable). Double-click → straight into the game (`dxwnd.exe /R:1`, headless). Quitting (in-game EXIT, or closing the window) tears down *everything* — no leftover black window. |
+| **`I76 Voodoo.app`** | **The pretty mode.** The game's native 3dfx Glide renderer through dgVoodoo 2.78.2 → DXVK → Metal: bright 3dfx color, 2x internal resolution, filtered textures. Cost: pipeline-compile hitches on first-seen content — warm after a one-time break-in run (see below). |
+| **`I76 DxWnd Settings.app`** | The DxWnd GUI for tweaking the profile (select the "Interstate 76" row → Edit; settings map in [docs/DXWND-TUNING.md](docs/DXWND-TUNING.md)). Changes save to the live `dxwnd.ini`. |
+
+One-time setup: [`setup-dxwnd.sh`](setup-dxwnd.sh) (installs DxWnd + our
+[profile](interstate-76.dxw)), [`setup-music.sh`](setup-music.sh) (in-mission music, see below),
+[`fix-arrows-for-mac.sh`](fix-arrows-for-mac.sh) (steering on Mac arrow keys).
+
+First launch, macOS asks for **microphone** access — that's Wine's CoreAudio driver opening the
+default *input* device during audio init. Harmless; **Deny is fine** (output is unaffected).
+
+The launch stubs ([main](i76-launch-stub.swift) / [voodoo](i76-voodoo-stub.swift) /
+[settings](i76-settings-stub.swift)) exist because the stock Sikarugir launcher injects a GL flag
+and a wrong CWD that break the renderers, misses the GStreamer env (freezes + silent music — see
+VERIFIED-FIXES), and LaunchServices won't run script bundle executables - so each is a small
+Mach-O (original launcher kept as `Sikarugir.orig`). They also fix "quit doesn't really quit":
+the stub waits for **`i76.exe`** to exit (the DxWnd host outlives the game), then reaps the whole
+Wine session and sweeps survivors.
+
+## In-mission music (fixed)
+
+Mission music is CD redbook audio; GOG ships it as `music/N.mp3` + an empty `tracklen.nfo`, so
+under Wine missions were silent (cutscene audio is separate and always worked).
+[`setup-music.sh`](setup-music.sh) wires GOG's files into DxWnd's **virtual CD audio** emulation
+(hard-links to its `TrackNN.mp3` naming, clears the broken `tracklen.nfo`; the profile's
+VIRTUALCDAUDIO flag does the rest). MP3 decode needs the GStreamer env the stubs set.
+**Confirmed playing in missions.** (No in-game radio/track controls exist — verified by dumping
+the exe's action tokens: no radio/music/cd actions, only `track_*` camera-tracking ones. Music is
+mission-scripted; the one knob is the music volume slider in Options.)
 
 **Disk use (~4.1 GB for a ~470 MB game):** the wrapper is self-contained - Wine engine (~760 MB) +
 the C: drive prefix (~2.8 GB: Windows system DLLs, fonts, registry, the DXVK shader caches) +
@@ -24,26 +52,32 @@ OpenGL), `d3d`, `redline` (software), `powervr`, and an undocumented **`gdi`** (
 blit - added/fixed by the AiO patch). No DirectX 11 anywhere - D3DMetal is irrelevant (set
 `D3DMETAL=0`).
 
-## DxWnd: the default (big scalable window)
+## DxWnd: the default (big fullscreen-4:3 window)
 
-DxWnd wraps the game's DirectDraw output so the 640x480 software render is scaled into a normal
-resizable window. Setup once with [`setup-dxwnd.sh`](setup-dxwnd.sh) (downloads DxWnd, installs
-our profile). The profile ([interstate-76.dxw](interstate-76.dxw), the DxWnd author's own I76
-profile adapted to our paths) is frozen at:
+DxWnd wraps the game's DirectDraw output so the software render (set the in-game resolution to
+its 1024x768 max — that IS the engine ceiling, see VERIFIED-FIXES) is scaled into a big window.
+Setup once with [`setup-dxwnd.sh`](setup-dxwnd.sh) (downloads DxWnd, installs our profile). The
+profile ([interstate-76.dxw](interstate-76.dxw)) is frozen at:
 
-- **Main tab:** Run in Window, Early hook, `Terminate on window close` (so closing the window
-  quits cleanly - without it you must force-quit), window 1280x960 at X,Y (50,50).
+- **Main tab:** Run in Window, Early hook, `Terminate on window close` (closing the window = quit;
+  the stub then reaps everything), **Position = Desktop** (`coord0=3`) + **Keep aspect ratio** →
+  fills the screen as letterboxed 4:3. `Adaptive ratio` OFF (that one stretches).
 - **Hook tab:** `Injection = Inject DLL` (the mouse is correct at this setting; the research's
   "SetWindowsHook causes mouse offset -> use Inject suspended" note does NOT apply here).
-- **Video tab:** thick frame (gives the title bar + handles), Floating, SD 4:3.
+- **Video tab:** thick frame (gives the title bar + handles), Floating, SD 4:3, **Hide desktop**
+  (black backdrop behind the letterbox).
 - **DirectX tab:** `Renderer = primary surface` (avoids black menus/cutscenes). Caveat: DxWnd's
   author flags this renderer as leaking GDI handles over long sessions - watch for gradual
   slowdown on marathon runs; restart the game if it creeps.
 
-**Headless launch:** `dxwnd.exe /R:1 /q` (1-based index; the parser does `iProgIndex-1` so `/R:1`
-= ini target 0 - this is why an earlier `/r:0` only opened the GUI). To open the DxWnd GUI to
-change settings instead, run `dxwnd.exe` with no args and **right-click the "Interstate 76" row ->
-Modify** (double-clicking the row *runs* the game).
+**Headless launch:** `dxwnd.exe /R:1` (1-based index; the parser does `iProgIndex-1` so `/R:1`
+= ini target 0 - this is why an earlier `/r:0` only opened the GUI; and do NOT add `/q`, it
+*suppresses* the launch). To change settings, use `I76 DxWnd Settings.app`
+(select the "Interstate 76" row -> Edit; double-clicking the row *runs* the game).
+
+*Note on quitting: if quitting a mission ever kills the whole game instead of returning to the
+menu, that's `Terminate on window close` reacting to the game recreating its window — uncheck it
+in Settings and quit via the in-game EXIT instead (the stub reaps either way).*
 
 **Emergency fallback** (if DxWnd ever breaks): the exe's own windowed software renderer,
 `i76.exe -gdi` - a normal but fixed 640x480 window, immune to every launcher quirk (reads no INI).
@@ -51,23 +85,31 @@ Modify** (double-clicking the row *runs* the game).
 **Colors:** the software renderer lacks the 3dfx gamma lift, so it runs darker than the
 Glide/Windows look - the game's own brightness setting (Options -> Graphic Detail) compensates.
 
-## The bright Glide paths (parked - here's the honest ledger)
+## The Voodoo mode (`I76 Voodoo.app`) — bright 3dfx, and how the warmup dies
 
-Both hardware-look paths work and both failed the daily-driver test. Files for the hybrid are
-still staged in the game folder; switching = changing `-gdi` to `-glide` in the stub source and
-recompiling (instructions in [i76-launch-stub.swift](i76-launch-stub.swift)).
+The dgVoodoo path now ships as its own launcher: `i76.exe -glide` → dgVoodoo 2.78.2 `Glide2x.dll`
+→ D3D11 FL10.1 → DXVK (swapped into the engine) → MoltenVK/Metal. Bright 3dfx gamma, 2x internal
+resolution (`dgVoodoo.conf Resolution = 2x`), filtered textures, real title-barred window,
+`FPSLimit=20` belt-and-braces.
 
-1. **OpenGLide `-glide`** (GOG's bundled wrapper): bright 3dfx colors, instant start - but the
-   game runs DirectDraw exclusive-fullscreen, so the window is **borderless** (no title bar, no
-   handles), snaps position on mode changes, and minimizes on every focus loss (Wine's hardcoded
-   behavior; `WindowsFloatWhenInactive=all` softens it at the cost of other window weirdness).
-2. **dgVoodoo 2.78.2 hybrid** (Glide -> D3D11 -> DXVK -> Metal, windowed): bright AND a real
-   title-barred window at 1280x960 - but pays a **measured ~70-second in-mission crawl per
-   session** while shaders compile, even with DXVK async pipeline compilation confirmed active
-   (12 threads) and MoltenVK concurrent compilation on. Session log: 0.2-0.4 fps for 69s, then a
-   snap to the full 20 fps cap. The compile cost lives in MoltenVK's SPIR-V->MSL conversion,
-   which this stack cannot persist (see the research doc's "kill the warmup" item for exactly
-   what a future MoltenVK/DXVK pairing needs).
+**The warmup, honestly:** first-seen effects compile GPU pipelines (DXVK → SPIR-V → MoltenVK →
+MSL → Metal). Measured cold: ~70 s of 0.2-0.4 fps in the first mission even with DXVK **async**
+compilation active (12 threads) and MoltenVK concurrent compile on. What ships against it:
+
+1. **DXVK async** (`dxvk.conf: dxvk.enableAsync = true`) — compiles on background threads.
+2. **DXVK state cache** (`i76.dxvk-cache` next to the exe) — every pipeline you've ever triggered
+   is *precompiled at the next launch during the boot/menu minute*. So the crawl is a **one-time
+   break-in**: play a mission (accept the hitches once, let it see explosions/smoke/night), and
+   later sessions start warm. Earlier "70 s every session" measurements were made with a nearly
+   empty cache — grow it and it stops.
+3. **In progress — the true kill:** a patched DXVK that persists the *Vulkan pipeline cache*
+   (where MoltenVK stores its converted MSL) to disk, making even the precompile near-free. See
+   [docs/DXGI-DGVOODOO-RESEARCH.md](docs/DXGI-DGVOODOO-RESEARCH.md) for the mechanism and
+   `tools/dxvk-pipeline-cache-persist/` once it lands.
+
+**OpenGLide `-glide`** (GOG's bundled wrapper) remains the parked alternative: bright and instant
+- but exclusive-fullscreen, so borderless + minimizes on every focus loss (Wine hardcoded;
+`WindowsFloatWhenInactive=all` softens it at the cost of other window weirdness).
 
 Full battle log, root causes (incl. the three-condition dgVoodoo-under-Wine recipe and the
 Sikarugir launcher's Glide-fatal `CX_FWD_COMPAT_GL_CTX=1`):
@@ -97,6 +139,8 @@ per-launch async-shader warmup, see quirks.)
    convert cleanly; `unzip` exits 1 with a warning - harmless).
 3. `Info.plist`: `Program Name and Path` = `C:\GOG Games\Interstate 76\i76.exe`,
    `Program Flags` = `-gdi` (NOT `-glide` - see the saga above), `D3DMETAL` = `0`.
+   *(Historical: the launch stubs now bypass the stock launcher entirely, so `Info.plist`
+   program/flags are inert - launch args live in the stub sources.)*
 4. Registry (per-app): `HKCU\Software\Wine\AppDefaults\i76.exe` -> `Version` = `win98`.
 5. **Registry: a Wine virtual desktop is REQUIRED** - without it the game page-faults at
    `01B82C26` (it calls `NtUserChangeDisplaySettings`, macOS refuses exclusive 640x480, the game
@@ -187,6 +231,14 @@ on the numpad - still reachable on a full-size external keyboard.
 (back up the original first). W/S notched throttle, A/D steer, Space fire, Tab weapon cycle,
 X reverse, C handbrake, I ignition, arrows glance. Not yet play-tested - verify in Instant Melee.
 Quirk: bare Shift can't be a primary key (the parser treats it as a modifier).
+
+## Force feedback (wheel/joystick)
+
+Real, and in this GOG build (Nitro Pack) - but dormant by default, and **there is no macOS path**
+(Wine's only FFB backend is Linux evdev). On a **Windows box**: run
+[`enable-force-feedback.bat`](enable-force-feedback.bat) as Administrator and your FFB wheel
+works like the Sidewinder did. Full analysis:
+[docs/FORCE-FEEDBACK-AND-VISUALS.md](docs/FORCE-FEEDBACK-AND-VISUALS.md).
 
 ## Verify-the-cap checklist (any path)
 
