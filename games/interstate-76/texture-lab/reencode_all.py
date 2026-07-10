@@ -7,9 +7,11 @@ recipe James dialled in with the dashboard tuner, applied game-wide):
   + BLEND_ESRGAN * esrgan_downscaled  (Real-ESRGAN x4 -> Lanczos to native: cleanup)
   + BLEND_SHARP  * sharpened          (esrgan + luminance-only unsharp: crisp edges,
                                        no colour fringing)
-Sharpen is luminance-only so saturated edges (hazard stripes, red bars) don't blue-
-fringe. All at native w/h - the engine's hard ceiling. If STAGING_DIR is omitted the
-script falls back to pure-ESRGAN (the old behaviour).
+The sharpen is a LUMINANCE box-blur unsharp mask - byte-for-byte the same math the
+HTML tuner runs (build_tuner.py lumSharpen), so the game-wide bake == what James
+approved in the tuner. Luminance-only => saturated edges (hazard stripes, red bars)
+don't blue-fringe. All at native w/h - the engine's hard ceiling. If STAGING_DIR is
+omitted the script falls back to pure-ESRGAN (the old behaviour).
 
 VQM re-encode: quantizes to t01.act + a fresh PRIVATE codebook per pak.
 M16 re-encode: fresh per-tile RGB565 palette (no quantization loss).
@@ -31,9 +33,9 @@ manifest = json.load(open(manifest_path))
 pal = i76img.read_act(os.path.join(assets, "t01.act"))
 t0 = time.time()
 
-# --- the recipe (James, 2026-07-10) ---
-BLEND_ORIG, BLEND_ESRGAN, BLEND_SHARP = 0.40, 0.35, 0.25
-SHARP_PCT, SHARP_RADIUS = 55, 1.0
+# --- the recipe (James, 2026-07-10, dialled in with build_tuner.py) ---
+BLEND_ORIG, BLEND_ESRGAN, BLEND_SHARP = 0.47, 0.31, 0.22
+SHARP_AMOUNT, SHARP_RADIUS = 116, 0.8   # tuner units: amount %, radius (rounds to box r)
 
 def _load(dir_, staged, w, h, resize):
     path = os.path.join(dir_, staged)
@@ -41,13 +43,27 @@ def _load(dir_, staged, w, h, resize):
         path = os.path.join(dir_, staged.replace(".png", "_out.png"))
     im = Image.open(path)
     if resize and im.size != (w, h):
-        im = im.resize((w, h), Image.LANCZOS)
+        im = im.resize((w, h), Image.LANCZOS)   # "HQ" downscale (tuner uses canvas-HQ)
     return im
 
-def _lum_unsharp(rgb):
-    y, cb, cr = rgb.convert("YCbCr").split()
-    y = y.filter(ImageFilter.UnsharpMask(radius=SHARP_RADIUS, percent=SHARP_PCT, threshold=1))
-    return Image.merge("YCbCr", (y, cb, cr)).convert("RGB")
+def _box_blur(Y, r):
+    """Separable box blur with edge-clamped sample count - matches the tuner's JS
+    (averages only in-bounds samples in a (2r+1) window)."""
+    H, W = Y.shape
+    cs = np.concatenate([np.zeros((H, 1), np.float32), np.cumsum(Y, axis=1)], axis=1)
+    x = np.arange(W); lo = np.clip(x - r, 0, W); hi = np.clip(x + r + 1, 0, W)
+    Yh = (cs[:, hi] - cs[:, lo]) / (hi - lo).astype(np.float32)[None, :]
+    cs2 = np.concatenate([np.zeros((1, W), np.float32), np.cumsum(Yh, axis=0)], axis=0)
+    y = np.arange(H); lo2 = np.clip(y - r, 0, H); hi2 = np.clip(y + r + 1, 0, H)
+    return (cs2[hi2, :] - cs2[lo2, :]) / (hi2 - lo2).astype(np.float32)[:, None]
+
+def _tuner_sharpen(arr):
+    """Luminance box-blur unsharp on an RGB float array - the tuner's exact lumSharpen:
+    delta = (amount/100)*(Y - boxblur(Y)); add delta to every channel (hue-preserving)."""
+    Y = 0.299 * arr[..., 0] + 0.587 * arr[..., 1] + 0.114 * arr[..., 2]
+    r = max(1, round(SHARP_RADIUS))
+    delta = (SHARP_AMOUNT / 100.0) * (Y - _box_blur(Y, r))
+    return arr + delta[..., None]
 
 _cache = {}
 def enhanced_rgba(staged_name, w, h):
@@ -62,10 +78,9 @@ def enhanced_rgba(staged_name, w, h):
     else:
         orig = _load(staging_dir, staged_name, w, h, resize=True)          # native, has alpha
         alpha = orig.getchannel("A") if orig.mode == "RGBA" else None
-        sharp = _lum_unsharp(esr)
         a = np.asarray(orig.convert("RGB"), np.float32)
         b = np.asarray(esr, np.float32)
-        c = np.asarray(sharp, np.float32)
+        c = _tuner_sharpen(b)                                              # sharpen the esrgan layer
         mix = (BLEND_ORIG * a + BLEND_ESRGAN * b + BLEND_SHARP * c).clip(0, 255).astype(np.uint8)
         out = Image.fromarray(mix, "RGB").convert("RGBA")
         if alpha is not None:
