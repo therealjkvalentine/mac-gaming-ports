@@ -5,6 +5,20 @@ gaming box: max graphics, force feedback, frame-rate smoothing, multiplayer. Eve
 cited; items marked **unverified** are exactly that — first-hand community confirmation wasn't
 found and they're experiments, not guarantees.*
 
+> **Results are in:** the playbook below was executed 2026-07-09 — see
+> [FINDINGS-2026-07-WINDOWS-AND-TEXTURES.md](FINDINGS-2026-07-WINDOWS-AND-TEXTURES.md)
+> for what's verified (dgVoodoo recipe, LSFG 20→40, M16 format crack, texture pipeline),
+> what's dead (wrapper-level replacement, fullscreen on modeless displays), and what's open.
+>
+> **Scripted:** [`setup-windows.ps1`](../setup-windows.ps1) automates §1 plus the input.map
+> fixes (§4): retires GOG's OpenGLide, deploys dgVoodoo2 x86 Glide DLLs, installs
+> [`dgVoodoo.windows.conf`](../dgVoodoo.windows.conf) (20 FPS cap, Voodoo1 2MB/1TMU, 3x res,
+> 8x MSAA, windowed), patches joystick5→joystick1 + mouse driving, writes `PLAY-i76.bat` +
+> desktop shortcut. Force feedback stays a separate admin step
+> ([`enable-force-feedback.bat`](../enable-force-feedback.bat)).
+> Note for 2.87.x: `WatermarkDisplayDuration = 0` now means *infinite* — the real watermark
+> switches are `3DfxWatermark = false` (Glide) / `dgVoodooWatermark = false` (DirectX).
+
 ## 1. Max graphics — dgVoodoo2 Glide, the canonical config
 
 The community-standard guide is [CahootsMalone's I76+dgVoodoo walkthrough](https://github.com/CahootsMalone/interstate-76-stuff/blob/master/running-interstate-76-gog-release-using-dgvoodoo.md)
@@ -50,6 +64,12 @@ motion is frame interpolation on top:
   x2 artifacts less than x3. Input latency stays 20fps-ish regardless — this smooths *looks*,
   not *feel*. I76's slow flat desert is actually favorable content. **No I76-specific LSFG
   report exists — this is an experiment.** Try x2 first.
+- **Working config (LS 3.2.2, set up 2026-07-09):** settings live in
+  `%LOCALAPPDATA%\Lossless Scaling\Settings.xml` (app must be closed when editing). Profile:
+  `FrameGeneration = LSFG3` (shows as "LSFG 3.1"), `LSFG3Mode1 = FIXED`, `LSFG3Multiplier = 2`,
+  `CaptureApi = WGC` (right for a windowed game), `DrawFps = true` (proves the 20/40 split
+  on-screen). Set dgVoodoo `ForceVerticalSync = false` first. Activate: focus the game,
+  Ctrl+Alt+S (toggle off the same way).
 - **Skip:** AMD AFMF2 (needs 60fps+ base to behave, disengages on fast motion — unverified on
   wrapped-1997 games), NVIDIA Smooth Motion (needs a per-game NVIDIA App profile i76.exe will
   never have), SVP (video players only).

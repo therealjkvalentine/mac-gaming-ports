@@ -234,7 +234,11 @@ wrong stick numbers, crashes); edit `input.map` instead. Facts + citations in
 
 Setting the game up on real Windows (max graphics via dgVoodoo, force feedback, frame
 interpolation, ALIVE multiplayer community)? The cited to-do list is
-[docs/WINDOWS-PLAYBOOK.md](docs/WINDOWS-PLAYBOOK.md).
+[docs/WINDOWS-PLAYBOOK.md](docs/WINDOWS-PLAYBOOK.md), automated by
+[setup-windows.ps1](setup-windows.ps1). The full July 2026 findings report — verified
+dgVoodoo recipe, the first documented I76+LSFG frame-generation result, the **cracked
+.M16 hardware-texture format**, and the first working vehicle-texture replacement
+pipeline — is **[docs/FINDINGS-2026-07-WINDOWS-AND-TEXTURES.md](docs/FINDINGS-2026-07-WINDOWS-AND-TEXTURES.md)**.
 
 ## Controls: Mac arrow keys (required fix)
 

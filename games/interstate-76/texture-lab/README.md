@@ -47,3 +47,20 @@ Upscaler used for the first demo: realesrgan-ncnn-vulkan (free, Apple Silicon) -
 model crisps edges but speckles tiny gauge text; try `realesrgan-x4plus-anime`, chaiNNer
 model zoo, or SD img2img at low denoise for better results. Enhance at 4x, then downsample
 back to the original size (the engine can't take bigger files - see the research doc).
+
+## Vehicle skins on Windows (2026-07-09): the M16/hardware path — WORKING
+
+Proven in-game on the Windows laptop (`-glide` + dgVoodoo): **the hardware renderer loads
+the `*6.pak` M16 texture sets, not the VQM `*m.pak` ones** — and ADDON/ overrides them.
+Verified with a magenta-marker probe on the melee Leprechaun (paint scheme 3 = the GTAZ
+variant; the scheme number in the pak name = the VCF's paint scheme, so probe the right one).
+
+- `enhance_cars_m16.py` — Real-ESRGAN (x4plus-anime) same-res enhancement of an M16 pak;
+  per-tile RGB565 palettes mean **no level-palette quantization** (richer than VQM repaints).
+- `enhance_cars.py` — same pipeline for the VQM/software sets (Mac DxWnd mode uses these).
+- `make_marker.py` — magenta-marker probe pak builder (plumbing verification).
+- M16 decode/encode (lossless round-trip) lives in `../tools/i76img.py`.
+- Shipped first: `pirana16` (Groove/Jade's Piranha) + `sovern16` (Taurus's "Eloise"
+  Sovereign) built to `cars-build/final/` and installed to the game's `ADDON/`.
+- Windows asset extraction: `zfs_extract.py` now takes `LZO2_DLL` env var (conda-forge
+  `lzo` package ships `Library/bin/lzo2.dll`).

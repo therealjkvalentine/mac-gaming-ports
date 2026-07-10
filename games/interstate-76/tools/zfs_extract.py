@@ -51,16 +51,29 @@ def parse(data):
 
 _lzo = None
 def decompress(payload, comp, dlen):
-    """comp 2 = LZO1X, 4 = LZO1Y - decompressed with liblzo2 (brew install lzo) via ctypes,
-    the same library Open76 P/Invokes."""
+    """comp 2 = LZO1X, 4 = LZO1Y - decompressed with liblzo2 via ctypes, the same
+    library Open76 P/Invokes. macOS: brew install lzo. Windows: point LZO2_DLL at
+    an lzo2.dll (e.g. from the conda-forge `lzo` package, Library/bin/lzo2.dll)."""
     if comp == 0:
         return payload
     global _lzo
     import ctypes, ctypes.util
     if _lzo is None:
-        path = (ctypes.util.find_library("lzo2")
-                or "/opt/homebrew/lib/liblzo2.dylib")
-        _lzo = ctypes.CDLL(path)
+        candidates = ([os.environ["LZO2_DLL"]] if os.environ.get("LZO2_DLL") else []) + [
+            ctypes.util.find_library("lzo2"),
+            "/opt/homebrew/lib/liblzo2.dylib",
+            "lzo2.dll", "liblzo2-2.dll",
+        ]
+        for path in candidates:
+            if not path:
+                continue
+            try:
+                _lzo = ctypes.CDLL(path)
+                break
+            except OSError:
+                continue
+        if _lzo is None:
+            sys.exit("liblzo2 not found - set LZO2_DLL or install lzo")
     fn = _lzo.lzo1x_decompress_safe if comp == 2 else _lzo.lzo1y_decompress_safe
     dst = ctypes.create_string_buffer(dlen)
     out_len = ctypes.c_size_t(dlen)

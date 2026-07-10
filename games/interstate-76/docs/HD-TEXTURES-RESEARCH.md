@@ -21,9 +21,17 @@ see "Ceilings" and "For future research".
     block id.
   - `.PIX` - *text* manifest: count, then `NAME.vqm offset length` lines into the matching `.PAK`.
   - `.PAK` - concatenation of the `.PIX`-listed VQMs.
-  - `.M16` - 16-bit-era image (sky/horizon art `zhr*`, night dashboards `zdash*06`): header
-    `u32 w, u32 h|0x80000000`, then what looks like 8-bit indices with a small trailer -
-    **not fully decoded yet** (odd sizes: 256x128 tile = 33,282 bytes payload, 514 extra).
+  - `.M16` - **CRACKED (2026-07-09, on the Windows box)**: the *hardware-renderer* texture
+    format (every `*6.pak` set, e.g. `pirana16.pak` - what `-glide` mode loads; the `*m.pak`
+    VQMs are the software renderer's). Layout:
+    `u32 w | u32 h|flags<<24 | u8[w*h] indices (row-major, 0xFF = transparent) |
+    u32 paletteCount | u16[paletteCount] RGB565 LE` - a per-tile LOCAL 16-bit palette
+    (max 255 entries; 0xFF reserved). Solved by cross-checking `leprcn16` against the
+    `leprcn1m` VQM ground truth: avg channel diff 7.75 = exactly 565 quantization. The
+    mysterious "514 extra bytes" = u32 count(255) + 255*u16 palette. Decoder + lossless
+    round-trip encoder now in `tools/i76img.py` (`decode_m16`/`encode_m16`).
+    Per-tile palettes mean M16 replacements have FULL color freedom (no level-.ACT
+    quantization) - strictly richer than what VQM repaints can carry.
 - **Cockpit/dashboard art** = `zdash101..601` (day, VQM tiles in PAK/PIX, 256x128 each, codebook
   `vpit.cbk`) + `zdash106..606` (night, M16). Menu shell = loose 8-bit BMPs in `SP256/`
   (trivially editable). Loading screens = 640x480 PCX.
@@ -71,6 +79,24 @@ enhancement (the only thing the engine can display today), the workflow is upsca
    band; art direction must respect the palette.
 3. The `-gdi` software renderer additionally point-samples (no filtering) - enhanced art still
    helps, but the big visual win is in `-glide` hybrid mode.
+
+## Prior-art sweep (2026-07-09, deep web search)
+
+- **No I76 texture pack has ever been released** (VOGONS/ModDB/GOG forums/PCGW/interstate76.com
+  all checked; closest = CahootsMalone's checkerboard terrain hex-poke proof and DIVER's
+  16-bit road-color bugfix). Whatever ships from this lab is a first.
+- **Wrapper-level replacement confirmed dead**: only Glidos does Glide texture override and
+  it's DOS-titles-only; dgVoodoo texture injection was requested on VOGONS (t=66553), called
+  feasible by Dege, never built (checked through 2.87.3, June 2026).
+- **Open76** (r1sc) dead upstream since 2020 but fork `rob518183/Open76` active through
+  June 2026; **Roanish/i76 "Vigilante '76"** (C, SDL2+Vulkan, Ghidra-based) active June 2026
+  and explicitly aims at upscaled textures someday - its `docs/REVERSING.md` documents the
+  engine's `texture_load()`/`vqm_decode()`. Blender GEO importer: `chasseyblue/i76-geo-importer`.
+- **Vehicle texture chain** (matches what we decoded here): VCF -> VDF + VTF (paint scheme;
+  VTFC chunk = 78 TMTs + 13 MAPs) -> TMT lists per-damage-state texture names -> pixels in
+  `<car><scheme>{m,6}.pak`. Melee "variant" pick = paint scheme = which pak set loads.
+- Taurus's car confirmed: **1969 Jefferson Sovereign "Eloise"** (`vjsovrn1.vcf` ->
+  `sovergn1.vtf` -> `sovern1m/16` paks).
 
 ## For future research (true HD)
 

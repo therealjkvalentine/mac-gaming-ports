@@ -11,6 +11,11 @@ Formats (verified against game data; layouts match Open76's parsers):
         top-to-bottom in 4px steps.
   .PIX  text manifest: count, then "NAME.vqm offset length" lines into the matching .PAK.
   .PAK  concatenation of the VQMs the .PIX lists.
+  .M16  hardware-renderer texture (the *6.pak sets, e.g. pirana16.pak; -glide mode):
+        u32 w | u32 h|flags<<24 | u8[w*h] indices (row-major; 0xFF = transparent) |
+        u32 paletteCount | u16[paletteCount] LOCAL palette in RGB565 LE.
+        Cracked 2026-07-09 by cross-checking leprcn16 vs leprcn1m (avg diff 7.75 =
+        565 quantization); count is 255 max because 0xFF is the transparency index.
 
 Usage:
   i76img.py decode FILE[.map|.vqm|.pak] PALETTE.act OUT.png [--cbk-dir DIR]
@@ -59,6 +64,57 @@ def decode_vqm(d, pal, cbk_dir):
         rgba += bytes((r, g, b, 0 if i == 0xFF else 255))
     return w, h, bytes(rgba)
 
+def decode_m16(d):
+    """M16 -> (w, h, flags, rgba). Colors from the tile's embedded RGB565 palette."""
+    w, h_raw = struct.unpack_from("<2I", d, 0)
+    h, flags = h_raw & 0xFFFFFF, h_raw >> 24
+    px = d[8:8 + w*h]
+    count = struct.unpack_from("<I", d, 8 + w*h)[0]
+    p16 = struct.unpack_from(f"<{count}H", d, 12 + w*h)
+    rgba = bytearray()
+    for i in px:
+        if i == 0xFF and i >= count:
+            rgba += b"\0\0\0\0"
+        else:
+            c = p16[i] if i < count else 0
+            rgba += bytes(((c >> 11 & 31) * 255 // 31, (c >> 5 & 63) * 255 // 63,
+                           (c & 31) * 255 // 31, 255))
+    return w, h, flags, bytes(rgba)
+
+def encode_m16(rgba, w, h, flags=0):
+    """RGBA -> M16 bytes with a per-tile RGB565 palette (max 255 colors + 0xFF alpha).
+    Colors are median-cut quantized to 255 if needed (PIL)."""
+    from PIL import Image
+    im = Image.frombytes("RGBA", (w, h), bytes(rgba))
+    alpha = im.getchannel("A")
+    rgb = im.convert("RGB")
+    # collect unique colors; quantize only if over budget
+    colors = rgb.getcolors(maxcolors=1 << 24)
+    if len(colors) > 255:
+        rgb = rgb.quantize(colors=255, method=Image.MEDIANCUT).convert("RGB")
+    pal565, lut = [], {}
+    out = bytearray(w * h)
+    data = rgb.tobytes()
+    amask = alpha.tobytes()
+    for p in range(w * h):
+        if amask[p] < 128:
+            out[p] = 0xFF
+            continue
+        r, g, b = data[p*3:p*3+3]
+        # round-to-nearest so decode(encode(x)) == x for 565-born colors
+        c = (((r * 31 + 127) // 255) << 11) | (((g * 63 + 127) // 255) << 5) | ((b * 31 + 127) // 255)
+        i = lut.get(c)
+        if i is None:
+            if len(pal565) >= 255:
+                i = min(range(len(pal565)), key=lambda j: abs((pal565[j] >> 11) - (c >> 11)) +
+                        abs((pal565[j] >> 5 & 63) - (c >> 5 & 63)) + abs((pal565[j] & 31) - (c & 31)))
+            else:
+                i = len(pal565); pal565.append(c)
+            lut[c] = i
+        out[p] = i
+    return (struct.pack("<2I", w, h | (flags << 24)) + bytes(out)
+            + struct.pack("<I", len(pal565)) + struct.pack(f"<{len(pal565)}H", *pal565))
+
 def decode_pak(pak_path, pal, cbk_dir):
     """Decode all VQM tiles in a PAK using its .PIX manifest; returns list of (name,w,h,rgba)."""
     pix_path = os.path.splitext(pak_path)[0] + ".pix"
@@ -69,7 +125,10 @@ def decode_pak(pak_path, pal, cbk_dir):
     it = iter(lines[1:])
     for name in it:
         off, ln = int(next(it)), int(next(it))
-        w, h, rgba = decode_vqm(d[off:off + ln], pal, cbk_dir)
+        if name.lower().endswith(".m16"):
+            w, h, _flags, rgba = decode_m16(d[off:off + ln])
+        else:
+            w, h, rgba = decode_vqm(d[off:off + ln], pal, cbk_dir)
         tiles.append((name, w, h, rgba))
     return tiles
 
