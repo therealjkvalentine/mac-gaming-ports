@@ -382,12 +382,38 @@ the Nitro Pack from the GOG library alongside — same dgVoodoo recipe applies.
 
 Ordered by leverage; contributions welcome.
 
-1. **True HD (arbitrary-resolution) textures** — the tier-2 unlock. The clean
-   route remains an **OpenGLide fork** with GlideN64-style hash→PNG substitution
-   at `grTexDownloadMipMap` (OpenGLide is open source and I76-compatible; a few
-   hundred lines). Alternative: lobby/fund the dgVoodoo plugin design Dege
-   sketched in [VOGONS t=66553](https://www.vogons.org/viewtopic.php?t=66553), or
-   test Special K injection over dgVoodoo's D3D11 output.
+1. **True HD (arbitrary-resolution) textures — IN PROGRESS: the OpenGLide-HD
+   fork exists and builds (2026-07-10).** We forked
+   [voyageur/openglide](https://github.com/voyageur/openglide) and added
+   hash-based dump/replace: `hdtex\dump\` harvests every unique texture the
+   game downloads as `<fnv1a64>.png`; a matching `hdtex\<hash>.png` uploads in
+   place of the original **at any resolution** — one hook in
+   `PGTexture::MakeReady`, stb for PNG I/O, ~300 lines, directory presence is
+   the only config. Builds clean 32-bit with portable
+   [w64devkit](https://github.com/skeeto/w64devkit/releases) x86 (GCC 16).
+   Bring-up findings, all debugger/screenshot-verified:
+   - **The 2 MB TMU bug bites wrappers too**: OpenGLide's default 16 MB
+     `TextureMemorySize` crashes I76 at boot — set `2`, mirroring dgVoodoo's
+     `MemorySizeOfTMU=2048` ([VOGONS t=70951](https://www.vogons.org/viewtopic.php?t=70951)).
+   - **Root-caused the sim-entry crash** (disassembly at `i76.exe+0x75a01`):
+     the game builds a 256-entry PC_NOCOLLAPSE palette and calls
+     `IDirectDrawPalette::SetEntries` through a NULL global — modern Windows
+     won't create 8-bit palettized DDraw primaries, so the palette never
+     existed. **GOG's own bundled OpenGLide crashes identically** — bare
+     `-glide` was likely never runnable on modern Windows.
+   - Fixes: the Windows **256COLOR compat layer** on i76.exe restores real
+     palettes. dgVoodoo's DDraw also provides palettes but **collides with
+     OpenGLide's GL window at boot** (deterministic winmmbase fault) — never
+     mix the two wrappers. [`swap-renderer.ps1`](../swap-renderer.ps1)
+     automates the dgVoodoo ⇄ OpenGLide-HD switch including compat-flag and
+     DDraw handling.
+   - Status: boots and stays alive on the fork; the in-sim dump→upscale→replace
+     loop is implemented, awaiting a human-driven melee run to verify (once
+     dumps land, `realesrgan-ncnn-vulkan -i hdtex\dump -o hdtex -n
+     realesrgan-x4plus-anime` IS the pack — folder mode keeps hash names).
+   Alternatives still open: Dege's dgVoodoo plugin sketch
+   ([VOGONS t=66553](https://www.vogons.org/viewtopic.php?t=66553)), Special K
+   injection over dgVoodoo's D3D11 output.
 2. **M16 `flags` byte (0x80)** — meaning unknown (mip presence? transparency
    hint?). Vehicle tiles observed single-level; CahootsMalone reports terrain
    PAKs carry mip chains — reconcile the two.
