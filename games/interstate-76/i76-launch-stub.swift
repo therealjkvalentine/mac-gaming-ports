@@ -59,6 +59,9 @@ func reap(_ A: String) {
     try? k.run(); k.waitUntilExit()
     Thread.sleep(forTimeInterval: 1)
     // Sweep survivors that reference THIS bundle (never touches other prefixes/games).
+    // BUT: if the user already relaunched (new i76/dxwnd session up), skip the sweep -
+    // a stale sweep would murder the fresh session; its own stub will clean up.
+    if running("i76\\.exe") || running("dxwnd\\.exe") { return }
     let s = Process()
     s.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
     s.arguments = ["-9", "-f", A + "/Contents/SharedSupport"]

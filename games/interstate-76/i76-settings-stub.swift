@@ -49,7 +49,10 @@ k.executableURL = URL(fileURLWithPath: A + "/Contents/SharedSupport/wine/bin/win
 k.arguments = ["-k"]
 try? k.run(); k.waitUntilExit()
 Thread.sleep(forTimeInterval: 1)
-let s = Process()
-s.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
-s.arguments = ["-9", "-f", A + "/Contents/SharedSupport"]
-try? s.run(); s.waitUntilExit()
+// Skip the sweep if the user already relaunched something from this wrapper.
+if !running("i76\\.exe") && !running("dxwnd\\.exe") {
+    let s = Process()
+    s.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
+    s.arguments = ["-9", "-f", A + "/Contents/SharedSupport"]
+    try? s.run(); s.waitUntilExit()
+}

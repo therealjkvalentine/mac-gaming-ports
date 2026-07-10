@@ -75,13 +75,16 @@ while booted && running("i76\\.exe") {
     Thread.sleep(forTimeInterval: 2)
 }
 // Reap the wine session + sweep anything still referencing this bundle
-// (explorer desktop, winedevice, ...).
+// (explorer desktop, winedevice, ...). Skip the sweep if the user already
+// relaunched - a stale sweep would murder the fresh session.
 let k = Process()
 k.executableURL = URL(fileURLWithPath: A + "/Contents/SharedSupport/wine/bin/wineserver")
 k.arguments = ["-k"]
 try? k.run(); k.waitUntilExit()
 Thread.sleep(forTimeInterval: 1)
-let s = Process()
-s.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
-s.arguments = ["-9", "-f", A + "/Contents/SharedSupport"]
-try? s.run(); s.waitUntilExit()
+if !running("i76\\.exe") && !running("dxwnd\\.exe") {
+    let s = Process()
+    s.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
+    s.arguments = ["-9", "-f", A + "/Contents/SharedSupport"]
+    try? s.run(); s.waitUntilExit()
+}

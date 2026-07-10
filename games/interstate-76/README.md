@@ -216,6 +216,26 @@ Full handoff brief: [docs/MAC-SETUP.md](docs/MAC-SETUP.md). Deep research with s
 [docs/i76-research-full.txt](docs/i76-research-full.txt). Windows-side notes:
 [docs/MODERN-SETUP.md](docs/MODERN-SETUP.md).
 
+## Controls: mouse driving + Xbox controller (native!)
+
+The engine natively supports **mouse driving** (analog `mouse Left/Right` steer, `Down/Up`
+throttle, three buttons) and **winmm joysticks** — no mapper software needed.
+[`setup-mouse-and-pad.sh`](setup-mouse-and-pad.sh) patches the active `input.map`: mouse
+steer/throttle + MB1/MB2/MB3 → weapons 1/2/3 (only three mouse-button tokens exist in the
+engine; weapon 4 stays on the `4` key), and fixes GOG's phantom `joystick5` bindings to
+`joystick1` with left-stick driving, A-button fire, hat glances. Keyboard bindings all stay —
+everything works at once. **Connect the controller before launching** (1997 games enumerate
+joysticks only at startup); verify Wine sees it with `wine control joy.cpl`. Never rebind via
+the in-game Control Configuration menu — it's community-confirmed buggy (appends chords,
+wrong stick numbers, crashes); edit `input.map` instead. Facts + citations in
+[docs/VERIFIED-FIXES.md](docs/VERIFIED-FIXES.md).
+
+## The Windows box
+
+Setting the game up on real Windows (max graphics via dgVoodoo, force feedback, frame
+interpolation, ALIVE multiplayer community)? The cited to-do list is
+[docs/WINDOWS-PLAYBOOK.md](docs/WINDOWS-PLAYBOOK.md).
+
 ## Controls: Mac arrow keys (required fix)
 
 winemac delivers Mac arrow keys as the game's `Grey*` (numpad-cluster) codes; the stock
