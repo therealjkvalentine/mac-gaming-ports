@@ -6,7 +6,9 @@
 #   2. Moves GOG's bundled OpenGLide DLLs aside (so dgVoodoo's Glide2x.dll wins).
 #   3. Copies dgVoodoo2's x86 Glide DLLs + control panel into the game folder.
 #   4. Installs dgVoodoo.windows.conf as the game folder's dgVoodoo.conf
-#      (20 FPS physics cap, Voodoo1 2MB TMU, 3x res, 8x MSAA, windowed).
+#      (20 FPS physics cap, Voodoo1 2MB TMU, 3x res, 8x MSAA; starts
+#      FULLSCREEN aspect-correct, Alt+Enter toggles windowed, mouse correct
+#      in both via dgVoodoo cursor emulation).
 #   5. Patches input.map: GOG's phantom joystick5 -> joystick1, adds native
 #      mouse driving + pad bindings (port of setup-mouse-and-pad.sh; idempotent;
 #      backup written beside it). NEVER rebind via the in-game menu - it's buggy.
@@ -100,7 +102,7 @@ if (Test-Path $mapPath) {
             '# --- Mouse + gamepad additions (setup-windows.ps1) ---',
             'hardpoint1_fire {', '   + mouse      LeftBtn', '}',
             'hardpoint2_fire {', '   + mouse      RightBtn', '}',
-            'hardpoint3_fire {', '   + mouse      MiddleBtn', '}',
+            'pilot_glance_left {', '   + mouse      MiddleBtn', '}',
             'weapon_fire {', '   + joystick1  Button1', '}',
             'weapon_cycle {', '   + joystick1  Button3', '}',
             'e_brake {', '   + joystick1  Button4', '}',
@@ -120,13 +122,19 @@ if (Test-Path $mapPath) {
 }
 
 # --- 6. launcher + shortcut ---------------------------------------------------
-# PLAY-i76.ps1 = the smart launcher: starts the game and snaps the engine's
-# fullscreen-size boot popup to a centered 640x480 window whenever it appears,
-# which is the ONLY geometry where the 2D shell's mouse hit-testing (raw window
-# pixels read as internal 640x480 coords) lines up with what's on screen. The
-# 3D sim still runs big via [Glide] Resolution=3x. Fullscreen = Lossless
-# Scaling (Ctrl+Alt+S) on top.
+# dgVoodoo (the conf above) owns presentation: fullscreen by default,
+# Alt+Enter toggles windowed, emulated cursor keeps the mouse correct in both.
+# PLAY-i76.ps1 just launches the game plus i76wheel.exe (mouse wheel ->
+# targeting keys; the engine has no wheel tokens - see tools/i76wheel.c;
+# build: gcc -O2 -s -mwindows -o i76wheel.exe i76wheel.c -luser32).
 Copy-Item (Join-Path $repoGameDir 'PLAY-i76.ps1') $GameDir -Force
+$wheelExe = Join-Path $repoGameDir 'tools\i76wheel.exe'
+if (Test-Path $wheelExe) {
+    Copy-Item $wheelExe $GameDir -Force
+    Write-Host "i76wheel.exe deployed (wheel up = target reticle, down = target nearest)."
+} else {
+    Write-Host "tools\i76wheel.exe not built - wheel targeting disabled (see tools\i76wheel.c)." -ForegroundColor Yellow
+}
 $bat = Join-Path $GameDir 'PLAY-i76.bat'
 Set-Content $bat "@echo off`r`nstart `"`" /min powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File `"%~dp0PLAY-i76.ps1`" -GameDir `"%~dp0.`" -Exe i76.exe`r`n" -Encoding ascii
 $ws = New-Object -ComObject WScript.Shell

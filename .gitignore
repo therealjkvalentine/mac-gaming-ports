@@ -14,5 +14,7 @@ games/*/texture-lab/*
 !games/*/texture-lab/README.md
 !games/*/texture-lab/*.py
 __pycache__/
+# Built helper binaries (source lives in games/*/tools/, e.g. i76wheel.c)
+games/*/tools/*.exe
 # Personal save-game backups (binary save data; never commit)
 mw5-save-backups/
