@@ -120,8 +120,15 @@ if (Test-Path $mapPath) {
 }
 
 # --- 6. launcher + shortcut ---------------------------------------------------
+# PLAY-i76.ps1 = the smart launcher: starts the game and snaps the engine's
+# fullscreen-size boot popup to a centered 640x480 window whenever it appears,
+# which is the ONLY geometry where the 2D shell's mouse hit-testing (raw window
+# pixels read as internal 640x480 coords) lines up with what's on screen. The
+# 3D sim still runs big via [Glide] Resolution=3x. Fullscreen = Lossless
+# Scaling (Ctrl+Alt+S) on top.
+Copy-Item (Join-Path $repoGameDir 'PLAY-i76.ps1') $GameDir -Force
 $bat = Join-Path $GameDir 'PLAY-i76.bat'
-Set-Content $bat "@echo off`r`ncd /d `"%~dp0`"`r`nstart `"`" i76.exe -glide`r`n" -Encoding ascii
+Set-Content $bat "@echo off`r`nstart `"`" /min powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File `"%~dp0PLAY-i76.ps1`" -GameDir `"%~dp0.`" -Exe i76.exe`r`n" -Encoding ascii
 $ws = New-Object -ComObject WScript.Shell
 $desktop = [Environment]::GetFolderPath('Desktop')
 $lnk = $ws.CreateShortcut((Join-Path $desktop "Interstate '76.lnk"))
