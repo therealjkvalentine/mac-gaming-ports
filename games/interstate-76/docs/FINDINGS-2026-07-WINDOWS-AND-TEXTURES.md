@@ -139,6 +139,13 @@ there's a 2024 report that the GOG build's FFB just works.**
   the `reg copy` fails even elevated — there is nothing to copy. If you need the
   keys, export them from a machine where the GOG installer ran, or run the
   installer once.
+- **Third route (untested): the original Force Feedback Patch v1.083** is still
+  hosted on [Local Ditch's downloads page](https://www.localditch.com/interstate-76/downloads/)
+  — the era installer that added FRC support to retail installs. Running it (or
+  extracting it) should produce the exact ACTIVISION registry keys/values the
+  wiki hack presumes, solving the zip-install chicken-and-egg without access to
+  a GOG-installed machine. (Our GOG 2019 exe is already v1.083-lineage via the
+  AiO patch — only the key material is wanted, not its binaries.)
 - Countervailing evidence the hack may be unnecessary on the GOG build: a March
   2024 report of FFB working out-of-the-box on a Logitech Driving Force GT
   ([VOGONS t=61199](https://www.vogons.org/viewtopic.php?t=61199)); see also the
@@ -353,7 +360,19 @@ the Nitro Pack from the GOG library alongside — same dgVoodoo recipe applies.
 - [PCGamingWiki: Interstate '76](https://www.pcgamingwiki.com/wiki/Interstate_'76)
 - [UCyborg's AiO Unofficial Patch (VOGONS t=68384)](https://www.vogons.org/viewtopic.php?t=68384)
   — the GOG 2019 exe *is* this patch, `I76PATCH.DLL` 20 FPS limiter included
-- [Local Ditch's I76 pages](https://www.localditch.com/interstate-76/) — FAQ, car chart
+- [Local Ditch's I76 pages](https://www.localditch.com/interstate-76/) — FAQ
+  (source of the frame-cap physics list), car chart, and a
+  [downloads archive](https://www.localditch.com/interstate-76/downloads/) that
+  preserves the era's files: v1.05/v1.06 patches, **Force Feedback Patch
+  v1.083** (see §3), Arsenal XP fix, Gold Edition upgrade, AVA Car
+  Designer/Hacker Tracker utilities, SMK player, printable level maps,
+  wallpapers/key cards. Their [links page](https://www.localditch.com/interstate-76/links.html)
+  indexes the living community: [SuiCyco's Speed Shop](https://z.interstate76.com)
+  (mechanics/strategy deep dives), [King's Custom Rods](https://kingmercury.tripod.com/)
+  (hacking/modding utility archive), the [AVA league](http://www.interstate76.com/the-ava/),
+  and the GOG forum. Local Ditch also runs a deep
+  [MechWarrior 2 hub](https://www.localditch.com/mechwarrior/mech2/index.html) —
+  see [`games/mechwarrior-2/`](../../mechwarrior-2/) in this repo.
 - [CahootsMalone's dgVoodoo walkthrough](https://github.com/CahootsMalone/interstate-76-stuff/blob/master/running-interstate-76-gog-release-using-dgvoodoo.md)
   (mirrored on the [GOG forum](https://www.gog.com/forum/interstate_series/simple_stepbystep_instructions_for_running_interstate_76_with_hardware_acceleration_using_dgvood/page1))
 - Multiplayer lives: community server **glenrio.interstate76.com**, weekly
