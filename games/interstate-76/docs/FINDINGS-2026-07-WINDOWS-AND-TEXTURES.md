@@ -322,6 +322,33 @@ interstate76.com, GitHub). Detail below because evidence-of-absence is the claim
   skins, no I76 texture packs). Xentax wiki is gone; format-RE community
   successor: [ResHax](https://reshax.com/).
 
+### Remakes, spiritual successors & fan projects
+- [**Interstate Nitro**](https://www.moddb.com/mods/interstate-nitro) — Battlefield 2
+  total-conversion mod; stated goal is a remake of I76 in a modern engine
+  (multiplayer car combat; ModDB hosts builds + media).
+- [**InterstateOutlaws**](https://github.com/ignitr0n/InterstateOutlaws) — GPL-3.0
+  vehicular-combat game (Crystal Space + CEL + ODE; C++/Python) by a US/UK/AU
+  student team, explicitly inspired by the classic auto-combat games; v0.2,
+  deathmatch with 6 vehicles/2 maps, dormant.
+- [**Interstate '76 Wiki** (Fandom)](https://interstate76.fandom.com/wiki/Interstate_%2776)
+  — lore/vehicle/mission reference; the
+  [Nitro Riders page](https://interstate76.fandom.com/wiki/Interstate_%2776:_Nitro_Riders)
+  covers the Nitro Pack's 20-mission prequel campaign (Taurus/Jade/Skeeter sets +
+  unlockable Natty Dread set, 14 new vehicles, Chemical Mortar/Caltrops).
+- Box art: [I76 box cover (Fandom/wikia)](https://static.wikia.nocookie.net/interstate76/images/4/46/Interstate_%2776_Box_Cover.jpg/revision/latest)
+  — local copy in `C:\Games\_tools\i76-assets\` (kept out of the repo: Activision
+  artwork, don't redistribute; link it, don't commit it).
+
+### Content audit: GOG "Arsenal" is TWO installs (2026-07-10)
+The GOG purchase (Interstate '76 Arsenal) ships the base game and the **Nitro
+Pack as a separate standalone install** (its own `NITRO.EXE`; the AiO patch
+covers both exes). A file audit of a "Gold Edition" base install shows what's
+actually inside: campaign trips `T01–T17`, melees `M01–M15` + `A01`, scenarios
+`S01–S07`, Smacker cutscenes for the base trip only — **no Nitro campaign
+files**. "Gold" here = the Nitro-era engine (incl. the dormant FFB code), not
+the Nitro content. If you want the 20 prequel missions + 14 vehicles, install
+the Nitro Pack from the GOG library alongside — same dgVoodoo recipe applies.
+
 ### The essential game references
 - [PCGamingWiki: Interstate '76](https://www.pcgamingwiki.com/wiki/Interstate_'76)
 - [UCyborg's AiO Unofficial Patch (VOGONS t=68384)](https://www.vogons.org/viewtopic.php?t=68384)
