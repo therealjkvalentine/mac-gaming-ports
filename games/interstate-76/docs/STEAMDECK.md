@@ -1,0 +1,159 @@
+# Interstate '76 on the Steam Deck — the recipe (and why the Deck may be the *best* way to play it)
+
+*Companion to the macOS port. The Deck is Linux, so almost everything we learned on the Mac
+transfers — minus the one layer that caused us the most pain. Status: **recipe is
+first-principles + community-pattern solid; the exact steps below were authored on the Mac and
+have NOT yet been run on physical Deck hardware** — every "verify on device" flag is called out
+honestly. If you run it, send back what broke and we'll harden this doc.*
+
+## Why the Deck is a genuinely great target
+
+Three things make I76 a better fit on the Deck than on the Mac:
+
+1. **Native Vulkan (RADV on RDNA2) — the shader-warmup stutter largely evaporates.** Our whole Mac
+   fight was `dgVoodoo → DXVK → **MoltenVK → Metal**`: MoltenVK re-translates every first-seen
+   pipeline SPIR-V→MSL, which is the "70-second warmup / mid-mission hitch" we spent a patched
+   DXVK to paper over. On the Deck the chain is `dgVoodoo → DXVK → **native Vulkan**` — DXVK's
+   shaders compile straight to RADV with no MSL step, and Proton *pre-caches* shaders (Steam even
+   downloads a prebuilt shader cache per game). The single biggest Mac problem is a non-problem
+   here.
+2. **Real force feedback.** Wine's only FFB backend is Linux **evdev** — which *is* the Deck.
+   Dock a USB force-feedback wheel, enable I76's dormant Nitro-Pack FFB (registry rename, below),
+   and you get the shaking the Mac can never deliver.
+3. **Controls are a solved problem.** Steam Input maps the Deck's sticks/triggers/buttons onto the
+   game's winmm joystick — no arrow-key gymnastics.
+
+The catches are the same as anywhere: the engine is hard-locked to **~20 FPS physics** and a
+**4:3 camera** (so the 1280×800 panel pillarboxes). Neither is fixable; both are fine.
+
+## The recommended path: Heroic + dgVoodoo (reusing our Mac configs verbatim)
+
+I76 is a **GOG** game, so the clean path is **[Heroic Games Launcher](https://heroicgameslauncher.com/)**
+(native GOG login + install, runs great on Deck, has built-in Winetricks / DLL-override / DXVK
+management). You install the real game through Heroic, drop a Glide wrapper into the game folder,
+and copy in the exact `dgVoodoo.conf` and `input.map` we already validated on the Mac.
+
+**The repo files that transfer to the Deck unchanged:**
+- [`dgVoodoo.conf`](../dgVoodoo.conf) — same graphics config; the gamma/MSAA/32-bit wins apply
+  natively (and should be *smoother* than Mac since there's no MoltenVK compile tax).
+- [`setup-mouse-and-pad.sh`](../setup-mouse-and-pad.sh) → the `input.map` it produces (mouse +
+  `joystick1` bindings; fixes GOG's phantom `joystick5`).
+- The **FFB registry rename** (below) — works for real here.
+- The **20 FPS** knowledge — the GOG exe's built-in `I76PATCH.DLL` limiter runs the same under
+  Proton.
+
+### Step by step (Deck Desktop Mode)
+
+1. **Install Heroic** from the Discover store; log into GOG; install *Interstate '76 Arsenal /
+   Gold*. Note the prefix + install path (Heroic shows it; typically
+   `~/Games/Heroic/Interstate 76/` with a prefix under `~/Games/Heroic/Prefixes/...`).
+2. **Runner:** in the game's Heroic settings, pick **Proton (GE-Proton latest)** or Heroic's
+   **Wine-GE**. Either gives you native Vulkan DXVK.
+3. **Glide wrapper** (the game is 3dfx Glide — it *needs* one; Proton's DXVK alone can't run Glide):
+   - Get **dgVoodoo2** (dege's site). Version guidance from the same Wine enumeration bug we hit on
+     Mac ([dxvk#5217](https://github.com/doitsujin/dxvk/issues/5217)): **recent dgVoodoo can fail to
+     enumerate under Wine** — the working window is **either our validated `2.78.2`, or `2.8.2`
+     with a recent DXVK** (which Proton bundles). Start with **2.78.2** (same version + config we
+     shipped on Mac); if the 3D screen is black, try 2.8.2.
+   - From dgVoodoo's `MS/x86/` drop **`Glide2x.dll`** (and `dgVoodoo.cpl` if you want the GUI) into
+     the **game install dir**, next to `i76.exe`. **Delete GOG's bundled OpenGLide** `glide2x.dll`
+     first so dgVoodoo's wins ([CahootsMalone guide](https://github.com/CahootsMalone/interstate-76-stuff/blob/master/running-interstate-76-gog-release-using-dgvoodoo.md)).
+   - Copy our [`dgVoodoo.conf`](../dgVoodoo.conf) into the same dir.
+   - *Alternative, zero-download:* keep GOG's **OpenGLide** (Glide→OpenGL). Simpler, but softer
+     image and no MSAA/gamma levers — dgVoodoo is the quality path.
+4. **Launch flag:** set the game's launch to `i76.exe -glide` (Heroic: "Alternative Exe" / launch
+   arguments). `-glide` selects the 3dfx renderer dgVoodoo wraps.
+5. **20 FPS cap (belt-and-braces):** the exe's `I76PATCH.DLL` already caps at 20; our
+   `dgVoodoo.conf` also sets `FPSLimit = 20`; and you can add the **Deck's own frame limiter** (QAM
+   → Performance → Framerate Limit → 20, or per-game). Any one suffices; stacking is harmless.
+   *Why it matters:* above ~25–30 FPS I76's physics break (cars flip, jumps/flamethrower/mortar
+   misbehave) — [Local Ditch FAQ](https://www.localditch.com/interstate-76/faq.html).
+6. **Controls:** see the Steam Input section.
+7. **Test in Instant Melee first** (physics sanity), then a mission.
+
+## Graphics config on the Deck
+
+Use our [`dgVoodoo.conf`](../dgVoodoo.conf) as-is. The three wins we found for the Mac apply here
+and should look *better* (native Vulkan, no MoltenVK quirks):
+
+- `EnableGlideGammaRamp = true` — the bright 3dfx gamma (the "darker than Windows" fix).
+- `Antialiasing = 4x` — MSAA; RADV does 4x/8x trivially, so on the Deck you can even try **8x**.
+- `DitheringEffect = pure32bit` + `Dithering = forcealways` — smooth 32-bit skies, no banding.
+- `TMUFiltering = bilinear` — authentic 3dfx smoothing (anisotropic is **impossible** for a Glide
+  game in dgVoodoo, by design — don't chase it).
+- Keep `VideoCard = voodoo_graphics` / `MemorySizeOfTMU = 2048` — >2 MB TMU triggers I76's
+  **texture panic** (engine limit, not hardware).
+- **Resolution for the 1280×800 panel:** the camera is 4:3, so you get pillarbox bars. Set
+  `Resolution = max` (dgVoodoo picks the largest 4:3 that fits → ~**1066×800**), or force a clean
+  4:3 like `960x720`. Let Gamescope handle the pillarbox (it will; don't stretch to 16:10 — it
+  warps the HUD). Because there's no MoltenVK tax, you can push the internal 4:3 res higher than we
+  dared on Mac and downscale — try `1440x1080` and see if the Deck holds 20 FPS (it will; this
+  engine is trivial for RDNA2).
+
+## Controls via Steam Input
+
+I76 is **winmm-joystick only** (`joyGetPosEx`, no DirectInput). Under Proton, the cleanest way to
+get the Deck's controls into it is to let **Steam Input** present a virtual pad:
+
+1. Add the game (or Heroic) to Steam as a **Non-Steam Game** so Steam Input applies its controller
+   layer. (Heroic can auto-add via its "Add to Steam" option.)
+2. Apply our `input.map` (run [`setup-mouse-and-pad.sh`](../setup-mouse-and-pad.sh) against the
+   Deck's game dir, or hand-copy the `joystick1` bindings) — it fixes GOG's phantom `joystick5`
+   and binds left-stick steer/throttle, buttons → weapons/e-brake, hat → glances.
+3. Pick a **driving template** in Steam Input: left stick = steer, **right trigger = throttle,
+   left trigger = brake/reverse**, face buttons = weapons, d-pad = glances. (I76 exposes throttle
+   as an analog sink; the triggers share one winmm axis (`Throttle`/Z) — Steam Input can split them
+   cleanly, which is *nicer* than the raw winmm behavior we documented on Mac.)
+4. **Gyro aiming** isn't meaningful here (no free-aim; it's a driving/targeting model) — skip it.
+5. **Do NOT use I76's in-game Control Configuration menu** — it's confirmed buggy (appends chords,
+   binds wrong stick numbers, crashes). Edit `input.map`; let Steam Input do the pad.
+
+*Verify on device:* whether the game sees the Steam Input virtual pad as `joystick1` vs
+`joystick0` under Proton — check with the game's controller list or `protontricks <appid> control
+joy.cpl`. Adjust the `input.map` number if needed (same lesson as the Mac joystick5 fix).
+
+## Force feedback — the Deck's exclusive win (docked wheel)
+
+The Deck has no built-in FFB, but **dock a USB force-feedback wheel** and it works for real
+(Wine's evdev FFB backend + I76's Nitro-Pack code):
+
+1. Enable the dormant FFB (same registry key as Windows) — run against the game's prefix:
+   `HKLM\SOFTWARE\ACTIVISION\Interstate'76FRC` → copy to `Interstate '76` (with the space). Do it
+   via Heroic → Winetricks → `regedit`, or `protontricks`, or our
+   [`enable-force-feedback.bat`](../enable-force-feedback.bat) run in the prefix.
+2. Plug the wheel in **before launching** (winmm enumerates at startup).
+3. The wheel's evdev FFB device must be readable (usually is on SteamOS; may need the wheel's
+   udev rules on other distros).
+
+This is the one feature that's *better* on the Deck than any Mac path.
+
+## Honest open items (need real-Deck verification)
+
+- **Mission music.** I76's mission soundtrack is **CD redbook audio**; GOG ships it as MP3s and
+  there's no CD, so it's silent under Wine unless emulated. On the Mac we fixed this with **DxWnd's
+  virtual CD audio** ([setup-music.sh](../setup-music.sh)). On the Deck's dgVoodoo path (no DxWnd)
+  the same silence likely occurs. Two options to test on device: (a) layer DxWnd on the Deck too
+  (it's a Windows app, runs under Proton — then our TrackNN.mp3 trick applies), or (b) check
+  whether Proton's MCI/`winegstreamer` plays the GOG MP3s directly. **Untested — flag for the first
+  Deck run.**
+- **dgVoodoo version** (2.78.2 vs 2.8.2) — pick empirically per the enumeration note above.
+- **Steam Input joystick number** — confirm `joystick1` on device.
+- **Exact internal resolution / FPS headroom** — RDNA2 will crush this engine, but confirm the
+  20 FPS cap holds and pillarbox looks right in Gamescope.
+
+## Deliverable in this repo
+
+- [`dgVoodoo.conf`](../dgVoodoo.conf), [`setup-mouse-and-pad.sh`](../setup-mouse-and-pad.sh),
+  [`enable-force-feedback.bat`](../enable-force-feedback.bat) — all transfer to the Deck.
+- [`setup-steamdeck.sh`](../setup-steamdeck.sh) — a helper that, run in Desktop Mode against your
+  Heroic game dir + prefix, drops the config, applies the input.map, does the FFB registry rename,
+  and checks the Glide wrapper. It guides rather than downloads (no game/binary redistribution —
+  same rule as the Mac side).
+
+## Sources
+- [Heroic Games Launcher](https://heroicgameslauncher.com/) + [Game Workarounds wiki](https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/wiki/Game-Workarounds)
+- [dgVoodoo2 official](https://sites.google.com/view/dgvoodoo2/) · [Proton issue #3516 (dgVoodoo2 for old DX/Glide)](https://github.com/ValveSoftware/Proton/issues/3516) · [dxvk#5217 (dgVoodoo Wine enumeration)](https://github.com/doitsujin/dxvk/issues/5217)
+- [CahootsMalone: running I76 GOG with dgVoodoo](https://github.com/CahootsMalone/interstate-76-stuff/blob/master/running-interstate-76-gog-release-using-dgvoodoo.md)
+- [VOGONS: dgVoodoo glide setup for I76 (2MB TMU / texture panic)](https://www.vogons.org/viewtopic.php?t=70951)
+- [Local Ditch I76 FAQ (what breaks above 20 FPS)](https://www.localditch.com/interstate-76/faq.html)
+- [Steamworks: Steam Deck & Proton](https://partner.steamgames.com/doc/steamdeck/proton) · [GamingOnLinux: DXVK on Steam Deck](https://www.gamingonlinux.com/2025/03/dxvk-2-6-brings-expanded-nvidia-reflex-support-and-lots-of-game-fixes-for-linux-steam-deck/)

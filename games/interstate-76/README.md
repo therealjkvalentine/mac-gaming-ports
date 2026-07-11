@@ -13,7 +13,7 @@ Built/installed by [`build-launchers.sh`](build-launchers.sh) into `~/Applicatio
 | App | What it is |
 |---|---|
 | **`Interstate76.app`** | **The daily driver.** DxWnd wraps the software renderer into a big screen-filling 4:3 window (black bars, title bar, draggable). Double-click → straight into the game (`dxwnd.exe /R:1`, headless). Quitting (in-game EXIT, or closing the window) tears down *everything* — no leftover black window. |
-| **`I76 Voodoo.app`** | **The pretty mode.** The game's native 3dfx Glide renderer through dgVoodoo 2.78.2 → DXVK → Metal: bright 3dfx color, 2x internal resolution, filtered textures. Cost: pipeline-compile hitches on first-seen content — warm after a one-time break-in run (see below). |
+| **`I76 Voodoo.app`** | **The pretty mode.** The game's native 3dfx Glide renderer through dgVoodoo 2.78.2 → DXVK → Metal: **bright 3dfx gamma, 4× MSAA, 32-bit skies**, 2× internal resolution ([dgVoodoo.conf](dgVoodoo.conf); see [docs/VISUAL-QUALITY-MAC.md](docs/VISUAL-QUALITY-MAC.md)). Cost: pipeline-compile hitches on first-seen content — warm after a one-time break-in run (see below). |
 | **`I76 DxWnd Settings.app`** | The DxWnd GUI for tweaking the profile (select the "Interstate 76" row → Edit; settings map in [docs/DXWND-TUNING.md](docs/DXWND-TUNING.md)). Changes save to the live `dxwnd.ini`. |
 
 One-time setup: [`setup-dxwnd.sh`](setup-dxwnd.sh) (installs DxWnd + our
@@ -262,7 +262,16 @@ Real, and in this GOG build (Nitro Pack) - but dormant by default, and **there i
 (Wine's only FFB backend is Linux evdev). On a **Windows box**: run
 [`enable-force-feedback.bat`](enable-force-feedback.bat) as Administrator and your FFB wheel
 works like the Sidewinder did. Full analysis:
-[docs/FORCE-FEEDBACK-AND-VISUALS.md](docs/FORCE-FEEDBACK-AND-VISUALS.md).
+[docs/FORCE-FEEDBACK-AND-VISUALS.md](docs/FORCE-FEEDBACK-AND-VISUALS.md). (FFB **does** work on the
+Steam Deck with a docked wheel — Linux has the evdev backend.)
+
+## Steam Deck / Linux
+
+The Deck may be the **best** way to play this: native Vulkan means the dgVoodoo→DXVK chain runs
+without MoltenVK, so the shader-warmup stutter largely disappears — and force feedback works. Our
+[`dgVoodoo.conf`](dgVoodoo.conf) and input bindings transfer directly. Full recipe (Heroic + Proton
++ dgVoodoo, controls, 20 FPS cap, FFB, open items): [docs/STEAMDECK.md](docs/STEAMDECK.md) +
+[`setup-steamdeck.sh`](setup-steamdeck.sh).
 
 ## Verify-the-cap checklist (any path)
 

@@ -38,9 +38,14 @@ The community-standard guide is [CahootsMalone's I76+dgVoodoo walkthrough](https
    `Max ISF`) and custom strings like `2560x1920, 60`
    ([dgVoodoo ReadmeGeneral](https://dege.freeweb.hu/dgVoodoo2/ReadmeGeneral/)). Start at `2x`,
    push to `Max ISF` / 2560x1920. Forcing 16:9 just stretches — the camera is hardcoded 4:3.
-6. **Then the untested-by-the-guide upgrades:** MSAA 2x→8x (Glide tab; no I76-specific breakage
-   reports — watch the HUD/sky and revert if artifacting) and forced Anisotropic 16x filtering
-   (**both unverified for I76 specifically**).
+6. **Then the untested-by-the-guide upgrade:** MSAA 2x→8x (Glide tab; no I76-specific breakage
+   reports — watch the HUD/sky and revert if artifacting). **Forced anisotropic filtering is NOT
+   available for I76** — corrected after source-level research: dgVoodoo emulates 3Dfx TMU
+   sampling in the pixel shader (bypassing the GPU sampler), so Glide games get only
+   `pointsampled`/`bilinear`, never anisotropic, on Windows or Mac. Also add
+   `EnableGlideGammaRamp = true` for the bright 3dfx gamma and `[GlideExt] DitheringEffect =
+   pure32bit` for banding-free skies. (These three — MSAA, gamma, 32-bit — are what we pulled back
+   into the Mac Voodoo config; see [VISUAL-QUALITY-MAC.md](VISUAL-QUALITY-MAC.md).)
 7. **Watermark off:** `GeneralExt\WatermarkDisplayDuration = 0` in dgVoodoo.conf (or the CPL
    checkbox on older builds).
 8. Known Glide-mode quirks: pause-menu mouse weirdness at forced res (navigate by keyboard);

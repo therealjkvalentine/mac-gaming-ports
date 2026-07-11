@@ -21,8 +21,27 @@ MACOS="$APP/Contents/MacOS"
 cp "$TMP/main-stub" "$MACOS/Sikarugir"
 codesign -f -s - "$MACOS/Sikarugir"   # sign stub alone; --deep chokes on symlinks
 
+# --- icon: real I76 box art, generated from the user's own GOG files (gfw_high.ico
+# ships with the game; never committed to the repo - repo ships no game files)
+GAME="$APP/Contents/SharedSupport/prefix/drive_c/GOG Games/Interstate 76"
+ICNS="$TMP/i76.icns"
+if [ -f "$GAME/gfw_high.ico" ]; then
+    mkdir -p "$TMP/icon.iconset"
+    sips -s format png "$GAME/gfw_high.ico" --out "$TMP/i76.png" >/dev/null 2>&1
+    for s in 16 32 128 256 512; do
+        sips -z $s $s "$TMP/i76.png" --out "$TMP/icon.iconset/icon_${s}x${s}.png" >/dev/null 2>&1
+        sips -z $((s*2)) $((s*2)) "$TMP/i76.png" --out "$TMP/icon.iconset/icon_${s}x${s}@2x.png" >/dev/null 2>&1
+    done
+    iconutil -c icns "$TMP/icon.iconset" -o "$ICNS" 2>/dev/null || ICNS=""
+else
+    ICNS=""
+fi
+MAIN_ICON="$(defaults read "$APP/Contents/Info.plist" CFBundleIconFile 2>/dev/null || echo "")"
+[ -n "$ICNS" ] && [ -n "$MAIN_ICON" ] && cp "$ICNS" "$APP/Contents/Resources/${MAIN_ICON%.icns}.icns"
+
 # --- 2+3. satellite apps: tiny bundles that point at the wrapper
-ICON="$(ls "$APP/Contents/Resources"/*.icns 2>/dev/null | head -1)"
+ICON="$ICNS"
+[ -n "$ICON" ] || ICON="$(ls "$APP/Contents/Resources"/*.icns 2>/dev/null | head -1)"
 make_app() { # $1=dir-name $2=bundle-id $3=swift-src $4=display-name
     B="$SIK/$1.app/Contents"
     mkdir -p "$B/MacOS" "$B/Resources"
