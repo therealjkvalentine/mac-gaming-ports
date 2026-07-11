@@ -11,7 +11,7 @@
 # (interstate-76.dxw: flagm0 bit 0). MP3 decode rides the GStreamer env the launch stub
 # already sets. (Documented fix; the AiO patch readme also recommends DxWnd virtual CD.)
 set -e
-GAME="$HOME/Applications/Sikarugir/Interstate76.app/Contents/SharedSupport/prefix/drive_c/GOG Games/Interstate 76"
+GAME="$HOME/Applications/Sikarugir/Interstate 76 - Software (DxWnd).app/Contents/SharedSupport/prefix/drive_c/GOG Games/Interstate 76"
 MUS="$GAME/music"
 [ -d "$MUS" ] || { echo "music folder not found: $MUS"; exit 1; }
 cd "$MUS"

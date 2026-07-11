@@ -1,4 +1,4 @@
-// Interstate '76 DxWnd settings stub (I76 DxWnd Settings.app).
+// Interstate '76 DxWnd settings stub (Interstate 76 - DxWnd Settings.app).
 //
 // Opens the DxWnd GUI (no /R:1 autorun) so you can tweak the profile: select the
 // "Interstate 76" row -> Edit for options (Main tab: position/aspect/terminate-on-
@@ -14,7 +14,7 @@
 import Foundation
 
 let A = FileManager.default.homeDirectoryForCurrentUser.path
-        + "/Applications/Sikarugir/Interstate76.app"
+        + "/Applications/Sikarugir/Interstate 76 - Software (DxWnd).app"
 let gv = A + "/Contents/Frameworks/GStreamer.framework/Versions/1.0"
 setenv("DYLD_FALLBACK_LIBRARY_PATH",
        A + "/Contents/Frameworks:" + gv + "/lib:" + A + "/Contents/SharedSupport/wine/lib", 1)

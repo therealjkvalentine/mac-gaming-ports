@@ -16,7 +16,7 @@ Pipeline background: [../docs/HD-TEXTURES-RESEARCH.md](../docs/HD-TEXTURES-RESEA
 
 ```sh
 cd games/interstate-76
-GAME=~/Applications/Sikarugir/Interstate76.app/Contents/SharedSupport/prefix/"drive_c/GOG Games/Interstate 76"
+GAME=~/Applications/Sikarugir/Interstate 76 - Software (DxWnd).app/Contents/SharedSupport/prefix/"drive_c/GOG Games/Interstate 76"
 
 # 1. (once) extract the archive somewhere and decode more art
 python3 tools/zfs_extract.py "$GAME/I76.ZFS" /tmp/i76-assets

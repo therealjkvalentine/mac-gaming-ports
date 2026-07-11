@@ -18,3 +18,7 @@ __pycache__/
 games/*/tools/*.exe
 # Personal save-game backups (binary save data; never commit)
 mw5-save-backups/
+
+# local secrets (Steam Deck SSH etc.) - never publish
+.env
+**/.env

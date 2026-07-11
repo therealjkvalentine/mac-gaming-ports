@@ -12,9 +12,9 @@ Built/installed by [`build-launchers.sh`](build-launchers.sh) into `~/Applicatio
 
 | App | What it is |
 |---|---|
-| **`Interstate76.app`** | **The daily driver.** DxWnd wraps the software renderer into a big screen-filling 4:3 window (black bars, title bar, draggable). Double-click → straight into the game (`dxwnd.exe /R:1`, headless). Quitting (in-game EXIT, or closing the window) tears down *everything* — no leftover black window. |
-| **`I76 Voodoo.app`** | **The pretty mode.** The game's native 3dfx Glide renderer through dgVoodoo 2.78.2 → DXVK → Metal: **bright 3dfx gamma, 4× MSAA, 32-bit skies**, 2× internal resolution ([dgVoodoo.conf](dgVoodoo.conf); see [docs/VISUAL-QUALITY-MAC.md](docs/VISUAL-QUALITY-MAC.md)). Cost: pipeline-compile hitches on first-seen content — warm after a one-time break-in run (see below). |
-| **`I76 DxWnd Settings.app`** | The DxWnd GUI for tweaking the profile (select the "Interstate 76" row → Edit; settings map in [docs/DXWND-TUNING.md](docs/DXWND-TUNING.md)). Changes save to the live `dxwnd.ini`. |
+| **`Interstate 76 - Software (DxWnd).app`** | **The daily driver.** DxWnd wraps the software renderer into a big screen-filling 4:3 window (black bars, title bar, draggable). Double-click → straight into the game (`dxwnd.exe /R:1`, headless). Quitting (in-game EXIT, or closing the window) tears down *everything* — no leftover black window. |
+| **`Interstate 76 - Glide-dgVoodoo-DXVK-Metal.app`** | **The pretty mode.** The game's native 3dfx Glide renderer through dgVoodoo 2.78.2 → DXVK → Metal: **bright 3dfx gamma, 4× MSAA, 32-bit skies**, 2× internal resolution ([dgVoodoo.conf](dgVoodoo.conf); see [docs/VISUAL-QUALITY-MAC.md](docs/VISUAL-QUALITY-MAC.md)). Cost: pipeline-compile hitches on first-seen content — warm after a one-time break-in run (see below). |
+| **`Interstate 76 - DxWnd Settings.app`** | The DxWnd GUI for tweaking the profile (select the "Interstate 76" row → Edit; settings map in [docs/DXWND-TUNING.md](docs/DXWND-TUNING.md)). Changes save to the live `dxwnd.ini`. |
 
 One-time setup: [`setup-dxwnd.sh`](setup-dxwnd.sh) (installs DxWnd + our
 [profile](interstate-76.dxw)), [`setup-music.sh`](setup-music.sh) (in-mission music, see below),
@@ -72,7 +72,7 @@ profile ([interstate-76.dxw](interstate-76.dxw)) is frozen at:
 
 **Headless launch:** `dxwnd.exe /R:1` (1-based index; the parser does `iProgIndex-1` so `/R:1`
 = ini target 0 - this is why an earlier `/r:0` only opened the GUI; and do NOT add `/q`, it
-*suppresses* the launch). To change settings, use `I76 DxWnd Settings.app`
+*suppresses* the launch). To change settings, use `Interstate 76 - DxWnd Settings.app`
 (select the "Interstate 76" row -> Edit; double-clicking the row *runs* the game).
 
 *Note on quitting: if quitting a mission ever kills the whole game instead of returning to the
@@ -85,7 +85,7 @@ in Settings and quit via the in-game EXIT instead (the stub reaps either way).*
 **Colors:** the software renderer lacks the 3dfx gamma lift, so it runs darker than the
 Glide/Windows look - the game's own brightness setting (Options -> Graphic Detail) compensates.
 
-## The Voodoo mode (`I76 Voodoo.app`) — bright 3dfx, and how the warmup dies
+## The Voodoo mode (`Interstate 76 - Glide-dgVoodoo-DXVK-Metal.app`) — bright 3dfx, and how the warmup dies
 
 The dgVoodoo path now ships as its own launcher: `i76.exe -glide` → dgVoodoo 2.78.2 `Glide2x.dll`
 → D3D11 FL10.1 → DXVK (swapped into the engine) → MoltenVK/Metal. Bright 3dfx gamma, 2x internal
@@ -151,7 +151,7 @@ per-launch async-shader warmup, see quirks.)
    treats the desktop window - which exactly equals Wine's virtual screen - as a fullscreen window
    and MINIMIZES it (parks it at -16000,-16000). Symptom: the game window appears, draws once,
    and vanishes within a few hundred ms. This key makes it float like a normal window.
-7. Launch via the wrapper (`open .../Interstate76.app`).
+7. Launch via the wrapper (`open .../Interstate 76 - Software (DxWnd).app`).
 
 Do NOT force `renderer=gdi` for ddraw - the shell creates a Direct3D device and crashes at the
 same address if refused. The default wined3d GL path works (one harmless

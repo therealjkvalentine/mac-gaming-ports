@@ -92,7 +92,7 @@ Both are real and neither is quickly fixable on this exact stack:
    So ~2 min of first-session slideshow while it compiles cold, every launch. (Symptoms match
    exactly: crawl -> smooth -> one-time hitch on first explosion.)
 2. **Glide wrappers read their config from the CWD; the Sikarugir launcher's CWD isn't the game
-   dir.** Launched via `open Interstate76.app`, dgVoodoo misses `dgVoodoo.conf` (defaults:
+   dir.** Launched via `open Interstate 76 - Software (DxWnd).app`, dgVoodoo misses `dgVoodoo.conf` (defaults:
    `FullScreenMode=true` -> fullscreen black + "Failed to initialize 3D hardware acceleration").
    **Later confirmed NOT dgVoodoo-specific: plain OpenGLide misses `OpenGLid.INI` the same way**
    (defaults to fullscreen -> identical fullscreen-black symptom). Any Glide provider must be

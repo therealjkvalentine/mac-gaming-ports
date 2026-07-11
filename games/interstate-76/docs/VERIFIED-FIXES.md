@@ -64,6 +64,6 @@ map. Stack: GOG Gold (2019 exe) + Sikarugir Wine 10 (wow64) wrapper, Apple Silic
 
 ## Where everything lives
 
-- Launchers: [build-launchers.sh](../build-launchers.sh) → `Interstate76.app` (DxWnd default), `I76 Voodoo.app` (dgVoodoo Glide), `I76 DxWnd Settings.app` (GUI)
+- Launchers: [build-launchers.sh](../build-launchers.sh) → `Interstate 76 - Software (DxWnd).app` (DxWnd default), `Interstate 76 - Glide-dgVoodoo-DXVK-Metal.app` (dgVoodoo Glide), `Interstate 76 - DxWnd Settings.app` (GUI)
 - DxWnd: [setup-dxwnd.sh](../setup-dxwnd.sh) + profile [interstate-76.dxw](../interstate-76.dxw); settings map: [DXWND-TUNING.md](DXWND-TUNING.md)
 - Research compendia: [RUNNING-I76-EVERYWHERE.md](RUNNING-I76-EVERYWHERE.md), [DXGI-DGVOODOO-RESEARCH.md](DXGI-DGVOODOO-RESEARCH.md), [FORCE-FEEDBACK-AND-VISUALS.md](FORCE-FEEDBACK-AND-VISUALS.md)

@@ -7,7 +7,7 @@
 #
 # One-time, needs network (downloads DxWnd ~5MB). Idempotent.
 set -e
-APP="$HOME/Applications/Sikarugir/Interstate76.app"
+APP="$HOME/Applications/Sikarugir/Interstate 76 - Software (DxWnd).app"
 PFX="$APP/Contents/SharedSupport/prefix"
 DIR=$(cd "$(dirname "$0")" && pwd)
 DXDIR="$PFX/drive_c/dxwnd"

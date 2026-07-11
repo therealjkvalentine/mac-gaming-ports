@@ -1,11 +1,11 @@
 #!/bin/sh
-# Interstate '76 - one-time setup for the Voodoo mode (I76 Voodoo.app).
+# Interstate '76 - one-time setup for the Voodoo mode (Interstate 76 - Glide-dgVoodoo-DXVK-Metal.app).
 # Wires the dgVoodoo Glide chain: dgVoodoo 2.78.2 Glide2x.dll + our known-good
 # dgVoodoo.conf/dxvk.conf + the float-when-inactive registry key. The engine-side
 # DXVK d3d11 swap is checked (not performed) - see docs/DXGI-DGVOODOO-RESEARCH.md.
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
-APP="$HOME/Applications/Sikarugir/Interstate76.app"
+APP="$HOME/Applications/Sikarugir/Interstate 76 - Software (DxWnd).app"
 GAME="$APP/Contents/SharedSupport/prefix/drive_c/GOG Games/Interstate 76"
 [ -d "$GAME" ] || { echo "game dir not found: $GAME"; exit 1; }
 
@@ -46,4 +46,4 @@ else
     echo "WARNING: engine d3d11.dll does not look like DXVK - the Voodoo mode will fail."
     echo "  See docs/DXGI-DGVOODOO-RESEARCH.md for the swap recipe."
 fi
-echo "Done. Launch with: I76 Voodoo.app (build-launchers.sh installs it)"
+echo "Done. Launch with: Interstate 76 - Glide-dgVoodoo-DXVK-Metal.app (build-launchers.sh installs it)"

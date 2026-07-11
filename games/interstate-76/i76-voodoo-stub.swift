@@ -1,4 +1,4 @@
-// Interstate '76 "Voodoo" launch stub - the dgVoodoo Glide mode (I76 Voodoo.app).
+// Interstate '76 "Voodoo" launch stub - the dgVoodoo Glide mode (Interstate 76 - Glide-dgVoodoo-DXVK-Metal.app).
 //
 // Launches the game inside a COMMAND-LINE Wine virtual desktop:
 //   wine explorer /desktop=I76Voodoo,1280x960 i76.exe -glide
@@ -44,7 +44,7 @@ import Foundation
 
 // Satellite app: the wrapper bundle lives at a fixed place, not inside us.
 let A = FileManager.default.homeDirectoryForCurrentUser.path
-        + "/Applications/Sikarugir/Interstate76.app"
+        + "/Applications/Sikarugir/Interstate 76 - Software (DxWnd).app"
 let gv = A + "/Contents/Frameworks/GStreamer.framework/Versions/1.0"
 setenv("DYLD_FALLBACK_LIBRARY_PATH",
        A + "/Contents/Frameworks:" + gv + "/lib:" + A + "/Contents/SharedSupport/wine/lib", 1)
@@ -58,10 +58,13 @@ setenv("GST_REGISTRY_1_0", A + "/Contents/SharedSupport/prefix/gst-registry.bin"
 // with MAXIMIZE_CONCURRENT_COMPILATION or the concurrent-compile knob is a no-op.
 setenv("MVK_CONFIG_USE_METAL_PRIVATE_API", "1", 1)
 setenv("MVK_CONFIG_SHOULD_MAXIMIZE_CONCURRENT_COMPILATION", "1", 1)
+// FAST_MATH forced on (default 2 = per-shader opt-out): marginally simpler codegen,
+// slightly faster Metal compile. IEEE NaN/Inf edge cases are irrelevant for a '97 game.
+setenv("MVK_CONFIG_FAST_MATH_ENABLED", "1", 1)
+// Decouple submit/present from the render thread (default 1 = on calling thread) so a
+// compile burst can't stall pacing. Medium-risk experiment - revert if frames judder.
+setenv("MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", "0", 1)
 setenv("DXVK_STATE_CACHE", "1", 1)
-// Experiment (off by default - can cause artifacts): decouple the render thread from
-// submit-time stalls. Uncomment to try, revert if you see glitches:
-// setenv("MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", "0", 1)
 
 func running(_ pattern: String) -> Bool {
     let t = Process()

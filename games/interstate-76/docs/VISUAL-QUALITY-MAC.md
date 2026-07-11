@@ -35,7 +35,7 @@ telemetry**, not screenshots:
   and `tools/dxvk-pipeline-cache-persist/`).
 
 **Left for your eyes:** the *look* of the gamma/MSAA improvement (brightness + smoothed edges) —
-launch **I76 Voodoo.app**, run a mission once to prime, and compare to before. If the HUD or
+launch **Interstate 76 - Glide-dgVoodoo-DXVK-Metal.app**, run a mission once to prime, and compare to before. If the HUD or
 binoculars ever corrupt with MSAA on, set `Antialiasing = appdriven` (the documented fallback).
 
 ## The cost model (why MSAA is safe now)

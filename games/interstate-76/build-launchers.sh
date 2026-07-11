@@ -1,16 +1,16 @@
 #!/bin/sh
 # Interstate '76 - build & install all three launchers. Idempotent; run after any
-# stub source change. Requires: Xcode CLT (swiftc), the Interstate76.app wrapper
+# stub source change. Requires: Xcode CLT (swiftc), the Interstate 76 - Software (DxWnd).app wrapper
 # already set up (see README).
 #
-#   1. Interstate76.app          - THE game (DxWnd big-window mode, dxwnd.exe /R:1)
-#   2. I76 Voodoo.app            - dgVoodoo Glide mode (bright 3dfx color, 2x res;
+#   1. Interstate 76 - Software (DxWnd).app          - THE game (DxWnd big-window mode, dxwnd.exe /R:1)
+#   2. Interstate 76 - Glide-dgVoodoo-DXVK-Metal.app            - dgVoodoo Glide mode (bright 3dfx color, 2x res;
 #                                  one-time pipeline break-in - see README)
-#   3. I76 DxWnd Settings.app    - DxWnd GUI for tweaking the profile
+#   3. Interstate 76 - DxWnd Settings.app    - DxWnd GUI for tweaking the profile
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SIK="$HOME/Applications/Sikarugir"
-APP="$SIK/Interstate76.app"
+APP="$SIK/Interstate 76 - Software (DxWnd).app"
 [ -d "$APP" ] || { echo "wrapper not found: $APP"; exit 1; }
 TMP="$(mktemp -d)"
 
@@ -61,11 +61,11 @@ make_app() { # $1=dir-name $2=bundle-id $3=swift-src $4=display-name
 EOF
     codesign -f -s - "$B/MacOS/$1"
 }
-make_app "I76 Voodoo"         "com.jkv.i76.voodoo"   "i76-voodoo-stub.swift"   "I76 Voodoo"
-make_app "I76 DxWnd Settings" "com.jkv.i76.settings" "i76-settings-stub.swift" "I76 DxWnd Settings"
+make_app "Interstate 76 - Glide-dgVoodoo-DXVK-Metal" "com.jkv.i76.voodoo"   "i76-voodoo-stub.swift"   "Interstate 76 - Glide-dgVoodoo-DXVK-Metal"
+make_app "Interstate 76 - DxWnd Settings"            "com.jkv.i76.settings" "i76-settings-stub.swift" "Interstate 76 - DxWnd Settings"
 
 rm -rf "$TMP"
 echo "Installed:"
 echo "  $APP                     (play - DxWnd big window)"
-echo "  $SIK/I76 Voodoo.app          (play - dgVoodoo Glide, pretty mode)"
-echo "  $SIK/I76 DxWnd Settings.app  (tweak DxWnd options)"
+echo "  $SIK/Interstate 76 - Glide-dgVoodoo-DXVK-Metal.app          (play - dgVoodoo Glide, pretty mode)"
+echo "  $SIK/Interstate 76 - DxWnd Settings.app  (tweak DxWnd options)"
