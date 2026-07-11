@@ -1,10 +1,49 @@
 # Interstate '76 on the Steam Deck — the recipe (and why the Deck may be the *best* way to play it)
 
 *Companion to the macOS port. The Deck is Linux, so almost everything we learned on the Mac
-transfers — minus the one layer that caused us the most pain. Status: **recipe is
-first-principles + community-pattern solid; the exact steps below were authored on the Mac and
-have NOT yet been run on physical Deck hardware** — every "verify on device" flag is called out
-honestly. If you run it, send back what broke and we'll harden this doc.*
+transfers — minus the one layer that caused us the most pain.*
+
+> **STATUS: INSTALLED on this user's Deck (2026-07-11).** The game (511 MB), dgVoodoo 2.78.2 +
+> our [`dgVoodoo.conf`](../dgVoodoo.conf) (gamma + 4× MSAA + 32-bit), a Deck-tuned `input.map`,
+> a full [controller config](../deck/controller_neptune_i76.vdf), and 5 pieces of
+> [library artwork](../deck/artwork/) were pushed over SSH to `~/Games/Interstate76/game`, added
+> to Steam as a non-Steam game (**GE-Proton10-12**, launch option `-glide`) alongside the existing
+> 10 shortcuts, all verified. The `deck/` folder holds the exact tooling used
+> ([add-to-steam.py](../deck/add-to-steam.py) — dependency-free binary-`shortcuts.vdf` editor with
+> a round-trip self-test; [install-on-deck.sh](../deck/install-on-deck.sh); [make-art.py](../deck/make-art.py);
+> [remap-controller.py](../deck/remap-controller.py)). **Left for the user: launch it once (Proton
+> builds the prefix + primes shaders), and apply the controller config (3 taps, below).**
+
+## Controller layout (installed as a template — apply once)
+
+Every I76 control is mapped to a Deck input in the conventional driving/vehicular-combat idiom.
+It's installed as a selectable template; to apply: **Steam → Interstate 76 → the controller icon →
+Browse Configs → Templates → "Interstate 76 (full driving+combat)"**.
+
+| Deck input | Action | Key |
+|---|---|---|
+| **R2 / L2** (triggers) | Accelerate / Brake | W / S |
+| **Left stick** | Steer (+ accel/brake on ↑↓) | A/D (+W/S) |
+| **R1** (right bumper) | Fire weapon | Space |
+| **L1** (left bumper) | Cycle weapon | Tab |
+| **A** | Handbrake | C |
+| **B** | Reverse | X |
+| **X** | Link weapons | F |
+| **Y** | Change view | V |
+| **D-pad** | Glance (also menu nav) | Arrows |
+| **L4 / R4** | Target front / nearest | Q / T |
+| **L5 / R5** | Target next / Radar range | Y / R |
+| **Left trackpad** ↑↓←→ / click | Map / Notepad / Lights / Radar-cam / Start engine | M / N / H / K / I |
+| **Right trackpad** | Mouse (menus + hardpoint-1 fire on click) | — |
+| **Start (☰) / Select (⧉)** | Confirm / Pause-back | Enter / Esc |
+
+Uses **keyboard emulation** (not the winmm joystick) deliberately — it's the most reliable path
+and doesn't depend on the game enumerating a virtual pad. Overflow actions (direct hardpoints 2–5,
+transmission, poetry) stay on the Steam on-screen keyboard (Steam + X) or can be added to the
+left-trackpad menu.
+
+*Original planning notes (kept for the recipe rationale; every "verify on device" flag below was
+resolved during the install above):*
 
 ## Why the Deck is a genuinely great target
 
