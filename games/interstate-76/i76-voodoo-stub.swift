@@ -76,7 +76,11 @@ func running(_ pattern: String) -> Bool {
 
 let p = Process()
 p.executableURL = URL(fileURLWithPath: A + "/Contents/SharedSupport/wine/bin/wine")
-p.arguments = ["explorer", "/desktop=I76Voodoo,1280x960",
+// Virtual desktop = the OUTPUT window. Its aspect IS the final aspect (dgVoodoo.conf
+// ScalingMode=stretched fills it). 1920x1234 = 14:9 (1.556) = "halfway between 4:3
+// and 16:9" - the look the user prefers on all platforms. Want pillarboxed 4:3
+// instead? use 1920x1440 here + ScalingMode=centered_ar in dgVoodoo.conf.
+p.arguments = ["explorer", "/desktop=I76Voodoo,1920x1234",
                "C:\\GOG Games\\Interstate 76\\i76.exe", "-glide"]
 p.currentDirectoryURL = URL(fileURLWithPath:
     A + "/Contents/SharedSupport/prefix/drive_c/GOG Games/Interstate 76")

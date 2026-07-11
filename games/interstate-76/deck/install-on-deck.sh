@@ -17,6 +17,18 @@ mkdir -p "$GAMEDIR"
 echo "Copying game files..."
 cp -a "$BUNDLE/game/." "$GAMEDIR/"
 
+# 1b. Deck-tune dgVoodoo.conf: FULLSCREEN + fill the 16:10 panel (the shipped conf is
+#     the Mac windowed one). Gamescope shows the fullscreen swapchain edge-to-edge.
+python3 - "$GAMEDIR/dgVoodoo.conf" <<'PY' 2>/dev/null || true
+import re,sys
+f=sys.argv[1]; t=open(f).read()
+t=re.sub(r'FullScreenMode\s*=\s*\w+.*','FullScreenMode                       = true', t)
+t=re.sub(r'ScalingMode\s*=\s*[\w]+.*','ScalingMode                          = stretched   ; fill 16:10 (halfway 4:3<->16:9)', t)
+t=re.sub(r'Resolution\s*=\s*\S+.*','Resolution                           = 1280x800     ; Deck native', t)
+open(f,'w').write(t)
+PY
+echo "dgVoodoo.conf tuned for the Deck (fullscreen 16:10)"
+
 # 2. Find a Proton / Wine to build the prefix. Prefer Proton GE, then any Proton,
 #    then system wine. We only need it to (a) create the prefix and (b) do the FFB
 #    registry rename; Steam will run the game with its own Proton at launch.

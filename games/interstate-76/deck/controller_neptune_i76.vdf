@@ -2,7 +2,7 @@
 {
 	"version" "3"
 	"game" "Interstate 76"
-	"title" "#Title"
+	"title" "Interstate 76 (driving+combat)"
 	"description" "#Description"
 	"controller_type"		"controller_neptune"
 	"major_revision"		"0"
