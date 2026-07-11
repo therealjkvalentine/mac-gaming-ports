@@ -15,13 +15,26 @@
 // D3D11 FL10.1 -> DXVK (engine i386-windows) -> Vulkan -> MoltenVK -> Metal.
 // Bright 3dfx color, 2x internal res, filtered textures - the pretty mode.
 //
-// TRADEOFF vs the DxWnd default: first-seen effects compile GPU pipelines
-// (SPIRV->MSL) - a one-time "break-in". Mitigations wired here:
-//   - dxvk.conf enableAsync: compiles on background threads, no render-thread stall.
-//   - MVK_CONFIG_SHOULD_MAXIMIZE_CONCURRENT_COMPILATION: MoltenVK parallelizes.
-//   - DXVK state cache (i76.dxvk-cache next to the exe) grows as you play and is
-//     precompiled during the boot/menu minute of every later launch - hitches only
-//     happen the FIRST time content is seen. Play a mission once; later runs warm.
+// TRADEOFF vs the DxWnd default: first-seen effects compile GPU pipelines - a
+// one-time "break-in". THE CEILING (researched 2026-07-11, cited in
+// docs/DXGI-DGVOODOO-RESEARCH.md): our patched DXVK persists MoltenVK's SPIRV->MSL
+// translation across runs (banked), BUT MoltenVK CANNOT persist the compiled *Metal*
+// pipeline - VkPipelineCache stores MSL only; MTLBinaryArchive persistence is
+// unimplemented (KhronosGroup/MoltenVK#1765, Apple-blocked) and absent even in our
+// 1.4.1 (latest). So a small ~0.3-1.0s Metal compile is re-paid every fresh launch;
+// zero warmup is impossible, only reducible/front-loadable. Mitigations wired here:
+//   - dxvk.conf enableAsync (dyasync): compiles on background threads; first-EVER
+//     pipeline of a shader family has no placeholder, so a startup burst can still
+//     read as one brief freeze.
+//   - MVK_CONFIG_USE_METAL_PRIVATE_API=1 + SHOULD_MAXIMIZE_CONCURRENT_COMPILATION=1:
+//     the private-API flag is REQUIRED for the concurrent-compile knob to actually
+//     engage (drains the compile queue in parallel instead of serially).
+//   - DXVK state cache (i76.dxvk-cache) + persisted VkPipelineCache (i76.vkpipeline-
+//     cache) precompile the MSL side during boot/menu. Play a mission once to bank
+//     it; later runs skip SPIRV->MSL and only re-pay the (small) Metal compile.
+//   NOTE: MSAA multiplies the pipeline count -> multiplies BOTH caches AND the
+//   per-launch Metal compile. Turn MSAA off (dgVoodoo CPL / Antialiasing) for the
+//   smallest warmup.
 //
 // CWD must be the game dir: dgVoodoo.conf discovery is CWD-relative, and the DXVK
 // state cache lands next to the exe. Same GStreamer/msync env as the main stub.
@@ -41,9 +54,14 @@ setenv("GST_PLUGIN_PATH", gv + "/lib/gstreamer-1.0", 1)
 setenv("GST_PLUGIN_SYSTEM_PATH_1_0", gv + "/lib/gstreamer-1.0", 1)
 setenv("GST_PLUGIN_SCANNER_1_0", gv + "/libexec/gstreamer-1.0/gst-plugin-scanner", 1)
 setenv("GST_REGISTRY_1_0", A + "/Contents/SharedSupport/prefix/gst-registry.bin", 1)
-// Pipeline-compile mitigations (see header)
+// Pipeline-compile mitigations (see header). USE_METAL_PRIVATE_API MUST precede/pair
+// with MAXIMIZE_CONCURRENT_COMPILATION or the concurrent-compile knob is a no-op.
+setenv("MVK_CONFIG_USE_METAL_PRIVATE_API", "1", 1)
 setenv("MVK_CONFIG_SHOULD_MAXIMIZE_CONCURRENT_COMPILATION", "1", 1)
 setenv("DXVK_STATE_CACHE", "1", 1)
+// Experiment (off by default - can cause artifacts): decouple the render thread from
+// submit-time stalls. Uncomment to try, revert if you see glitches:
+// setenv("MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", "0", 1)
 
 func running(_ pattern: String) -> Bool {
     let t = Process()

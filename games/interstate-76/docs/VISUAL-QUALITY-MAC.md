@@ -59,6 +59,44 @@ the 4:3 image for crisper edges. It needs **two** matching edits:
 Left at 2× by default because it's the safe, already-good size the user was happy with; the bump is
 a clean experiment when you want maximum sharpness.
 
+## The shader warmup — the hard ceiling (researched 2026-07-11)
+
+The Voodoo mode's first-launch hitch has a **real floor we can't cross**, and it's worth
+understanding so we stop chasing "zero warmup":
+
+- The chain is Glide → dgVoodoo → D3D11 → DXVK → **MoltenVK → Metal**. Every unique pipeline costs
+  (a) SPIR-V→MSL translation, then (b) Metal compiling that MSL into a pipeline object.
+- **We already bank (a) across runs** — our patched DXVK persists MoltenVK's VkPipelineCache
+  (`i76.vkpipeline-cache`), so SPIR-V→MSL is skipped on later launches (telemetry: it ran only 6×
+  with a warm cache).
+- **We cannot bank (b).** MoltenVK's pipeline cache stores **MSL source only** — it does **not**
+  persist the compiled Metal pipeline. Caching compiled Metal (via `MTLBinaryArchive`) has been an
+  open MoltenVK request since Nov 2022 ([#1765](https://github.com/KhronosGroup/MoltenVK/issues/1765)),
+  blocked by an Apple limitation (archives serialize only to a file URL, not memory), and is
+  **absent even in our MoltenVK 1.4.1 — the latest stable**. `VK_KHR_pipeline_binary` (the standard
+  fix) isn't implemented either. So Metal re-compiles every pipeline on each fresh process.
+- **Realistic floor:** ~2 ms per pipeline (up to ~20 ms worst case) × a few hundred pipelines for
+  this simple '97 title ≈ **0.3–1.0 s of one-time compile per launch**. That's the irreducible
+  minimum; it cannot reach zero and cannot carry across runs.
+
+**What we do about it (all now wired into [`i76-voodoo-stub.swift`](../i76-voodoo-stub.swift)):**
+- `MVK_CONFIG_USE_METAL_PRIVATE_API=1` **+** `MVK_CONFIG_SHOULD_MAXIMIZE_CONCURRENT_COMPILATION=1`
+  — the private-API flag is *required* for the concurrent-compile knob to engage (we were setting
+  the second without the first, so it was a no-op). Now first-seen pipelines compile in parallel.
+- DXVK **dyasync** compiles on background threads — so most first-seen pipelines show as a brief
+  visual pop-in, not a freeze. The exception is the *first-ever* pipeline of a shader family (no
+  placeholder to substitute), which is why a startup burst can still read as one short hitch.
+- **Play a mission once to bank the MSL cache**, then later launches skip SPIR-V→MSL and only re-pay
+  the small Metal compile — ideally absorbed during the boot/menu phase.
+- **MSAA multiplies pipeline count → multiplies the per-launch Metal compile.** So `Antialiasing =
+  off` (dgVoodoo CPL, Glide tab) gives the *smallest* warmup; 4× trades a bigger warmup for smoother
+  edges. That's the real knob — now flip it live in the Control Panel
+  ([`open-dgvoodoo-settings.command`](../open-dgvoodoo-settings.command)).
+
+Bottom line: the warmup is **reducible and front-loadable, not eliminable** — a Mac/MoltenVK
+limitation, not something we can patch away. The day MoltenVK lands MTLBinaryArchive persistence
+(watch #1765), the residual disappears; until then this is the floor.
+
 ## What did NOT port (and why)
 
 - **Anisotropic filtering** — impossible for Glide (above).
