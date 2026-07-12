@@ -65,6 +65,13 @@ map. Stack: GOG Gold (2019 exe) + Sikarugir Wine 10 (wow64) wrapper, Apple Silic
 | Higher *internal* res needs Glide | dgVoodoo 2.78.2 (Glide→D3D11→DXVK→MoltenVK) renders 2x+ with 3dfx gamma — the "Voodoo" launcher. Cost: pipeline-compile warmup on first-seen content (SPIRV→MSL); mitigations: DXVK async + state cache (warm after a break-in run); true fix in progress: persist the VkPipelineCache |
 | dgVoodoo under Wine needs 3 conditions | ≤2.78.2 + **DXVK** d3d11 (wined3d refuses FL10.1 on GL and Vulkan) + wrap **Glide only** (wrapping ddraw too = dual swapchains stacking invisibly in winemac). Full saga: [DXGI-DGVOODOO-RESEARCH.md](DXGI-DGVOODOO-RESEARCH.md) |
 
+## Gameplay quirks (engine, not the port)
+
+| Symptom | Root cause | Fix |
+|---|---|---|
+| **Mission 5 canyon jump falls just short** (no other way out) | I76's jump distance is **inversely tied to framerate** - above 20 FPS the car falls too fast per frame and lands short ([Local Ditch](https://www.localditch.com/posts/fps-jumping/), [GOG forum](https://www.gog.com/forum/interstate_series/argh_help)). The GOG exe's AiO limiter targets 20 but overshoots to ~**20.66** here - just enough to miss | Cap to exactly 20: DxWnd **`maxfps0=20`** in the profile (throttles the ddraw Flip -> the game loop, incl. physics, runs at 20). Then **use nitrous** on the ramp approach for margin |
+| **Nitrous equipped but nothing happens** | The engine has `nitrous_on`/`nitrous_off` actions but **no default binding** in this build (not in KEYBOARD.MAP/input.map) | Bind them in `input.map`: `nitrous_on { + keyboard Z }` / `nitrous_off { - keyboard Z }` = **hold Z to boost**. Any free key works |
+
 ## Where everything lives
 
 - Launchers: [build-launchers.sh](../build-launchers.sh) → `Interstate 76 - Software (DxWnd).app` (the Mac build), `Interstate 76 - DxWnd Settings.app` (GUI). Voodoo/Glide is **parked** ([VOODOO-PARKED.md](VOODOO-PARKED.md))
