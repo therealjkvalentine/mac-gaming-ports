@@ -1,8 +1,8 @@
-"controller_mappings"
+﻿"controller_mappings"
 {
 	"version"		"3"
 	"game"		"Interstate 76"
-	"title"		"Interstate 76 - Option 1 v3 (Sim-Combat, analog)"
+	"title"		"Interstate 76 - Option 1 v4 (Sim-Combat, analog)"
 	"description"		"#Description"
 	"controller_type"		"controller_neptune"
 	"major_revision"		"0"
@@ -138,7 +138,11 @@
 						"bindings"
 						{
 							"binding"		"key_press RETURN, Confirm / select"
-							"binding"		"mouse_button LEFT, Click / skip cutscene"
+							"binding"		"mouse_button LEFT, Click / skip"
+						}
+						"settings"
+						{
+							"repeat_rate"		"99"
 						}
 					}
 				}
@@ -151,7 +155,11 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press ESCAPE, Back / pause"
+							"binding"		"key_press TAB, Cycle weapon"
+						}
+						"settings"
+						{
+							"repeat_rate"		"99"
 						}
 					}
 				}
@@ -166,6 +174,10 @@
 						{
 							"binding"		"key_press X, Reverse"
 						}
+						"settings"
+						{
+							"repeat_rate"		"99"
+						}
 					}
 				}
 			}
@@ -177,7 +189,22 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press V, Change view"
+							"binding"		"key_press F3, External view"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
+						}
+					}
+					"Double_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press F1, Cockpit view"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"2"
 						}
 					}
 				}
@@ -205,6 +232,11 @@
 						{
 							"binding"		"key_press M, Map"
 						}
+						"settings"
+						{
+							"repeat_rate"		"99"
+							"haptic_intensity"		"1"
+						}
 					}
 				}
 			}
@@ -218,18 +250,10 @@
 						{
 							"binding"		"key_press N, Notepad"
 						}
-					}
-				}
-			}
-			"dpad_west"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
+						"settings"
 						{
-							"binding"		"key_press R, Radar range"
+							"repeat_rate"		"99"
+							"haptic_intensity"		"1"
 						}
 					}
 				}
@@ -244,10 +268,15 @@
 						{
 							"binding"		"key_press K, Radar camera"
 						}
+						"settings"
+						{
+							"repeat_rate"		"99"
+							"haptic_intensity"		"1"
+						}
 					}
 				}
 			}
-			"click"
+			"dpad_west"
 			{
 				"activators"
 				{
@@ -255,7 +284,12 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press Y, Next target"
+							"binding"		"key_press R, Radar range"
+						}
+						"settings"
+						{
+							"repeat_rate"		"99"
+							"haptic_intensity"		"1"
 						}
 					}
 				}
@@ -279,11 +313,15 @@
 			{
 				"activators"
 				{
-					"Full_Press"
+					"Soft_Press"
 					{
 						"bindings"
 						{
-							"binding"		"mouse_button LEFT, Click"
+							"binding"		"mouse_button LEFT"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
 						}
 					}
 				}
@@ -312,7 +350,11 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press C, Handbrake"
+							"binding"		"key_press G, Horn"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
 						}
 					}
 				}
@@ -320,8 +362,7 @@
 		}
 		"settings"
 		{
-			"requires_click"		"0"
-			"edge_binding_radius"		"24995"
+			"deadzone_inner_radius"		"7199"
 		}
 	}
 	"group"
@@ -338,7 +379,12 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press F, Fire-all / link"
+							"binding"		"key_press 2, Fire secondary (hardpoint 2)"
+						}
+						"settings"
+						{
+							"repeat_rate"		"99"
+							"haptic_intensity"		"2"
 						}
 					}
 				}
@@ -361,6 +407,11 @@
 						{
 							"binding"		"key_press SPACE, Fire weapon"
 						}
+						"settings"
+						{
+							"repeat_rate"		"99"
+							"haptic_intensity"		"2"
+						}
 					}
 				}
 			}
@@ -380,7 +431,11 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press I, Start engine"
+							"binding"		"key_press UP_ARROW"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
 						}
 					}
 				}
@@ -393,20 +448,11 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press H, Headlights"
+							"binding"		"key_press DOWN_ARROW"
 						}
-					}
-				}
-			}
-			"dpad_west"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
+						"settings"
 						{
-							"binding"		"key_press G, Horn"
+							"haptic_intensity"		"1"
 						}
 					}
 				}
@@ -419,7 +465,28 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press B, Binoculars"
+							"binding"		"key_press RIGHT_ARROW"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
+						}
+					}
+				}
+			}
+			"dpad_west"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press LEFT_ARROW"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
 						}
 					}
 				}
@@ -446,6 +513,10 @@
 						{
 							"binding"		"key_press UP_ARROW, Glance up"
 						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
+						}
 					}
 				}
 			}
@@ -458,6 +529,10 @@
 						"bindings"
 						{
 							"binding"		"key_press DOWN_ARROW, Glance down"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
 						}
 					}
 				}
@@ -472,6 +547,10 @@
 						{
 							"binding"		"key_press RIGHT_ARROW, Glance right"
 						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
+						}
 					}
 				}
 			}
@@ -485,6 +564,10 @@
 						{
 							"binding"		"key_press LEFT_ARROW, Glance left"
 						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
+						}
 					}
 				}
 			}
@@ -496,7 +579,11 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press U, Untarget"
+							"binding"		"key_press E, Look at target"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
 						}
 					}
 				}
@@ -504,7 +591,7 @@
 		}
 		"settings"
 		{
-			"output_joystick"		"2"
+			"requires_click"		"0"
 		}
 	}
 	"group"
@@ -547,7 +634,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press T, Target nearest"
+							"binding"		"key_press Y, Next target"
 						}
 					}
 				}
@@ -560,7 +647,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press TAB, Change weapon"
+							"binding"		"key_press C, Handbrake"
 						}
 					}
 				}
@@ -573,7 +660,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press Q, Front target"
+							"binding"		"key_press I, Start engine"
 						}
 					}
 				}
@@ -586,7 +673,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press Y, Next target"
+							"binding"		"key_press T, Target nearest"
 						}
 					}
 				}
@@ -599,7 +686,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press PAGE_UP, Zoom out"
+							"binding"		"key_press H, Headlights"
 						}
 					}
 				}
@@ -612,7 +699,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press PAGE_DOWN, Zoom in"
+							"binding"		"key_press B, Binoculars"
 						}
 					}
 				}

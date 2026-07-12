@@ -110,3 +110,34 @@ R-trackpad  : cursor moves in menu? click selects?
 Start / ⧉  : pause? map?
 And: Game Mode or Desktop Mode when you tested; engine fullscreen this time?
 ```
+
+## 6. Round-2 results (user field test) — three more layers decoded
+
+The user's Game-Mode test confirmed the focus-split theory: **steering, fullscreen, menu-confirm,
+and firing all came alive at once.** Residue decoded:
+
+- **Trackpad "double-tap" on map/notepad**: v3's rebuilt trackpad group dropped Valve's
+  per-activator `settings` (`repeat_rate`, `haptic_intensity`) and group `edge_binding_radius`,
+  and added a `click` input Valve never had. v4 restores Valve's structure verbatim (keys swapped
+  only). Lesson: **surgical binding swaps beat structural rebuilds** — Valve's activator settings
+  are load-bearing.
+- **Right stick moved menus but didn't glance in-sim**: menus read arrows as Windows VK codes;
+  the sim reads `KEYBOARD.MAP`-style scancode tokens where extended arrows are `Grey*Arrow` —
+  the same token split we hit on macOS, opposite direction. Fix: `input.map` now binds glance to
+  **both** flavors (separate alternative blocks).
+- **"Y does too many things"**: Y sent `V` = the game's *dash/combat-view toggle* (looks like
+  hide-dash + zoom). Real cameras are fixed **F-keys** in `gamekey.map` (F1 cockpit, F3 chase…).
+  v4: Y = F3 external, double-tap Y = F1 cockpit.
+
+### Option 1 v4 (live)
+| Input | Action | | Input | Action |
+|---|---|---|---|---|
+| L-stick | steer + throttle (analog) | | A | confirm / select / skip (Enter+click) |
+| L3 | horn | | B | cycle weapon (Tab) |
+| R-stick | glance ←→↑↓ | | X | reverse |
+| R3 | look at target (E) | | Y | ext view (F3) · double-tap = cockpit (F1) |
+| R2 | fire weapon (Space, hold repeats) | | RB | handbrake (C) |
+| L2 | fire secondary (hardpoint 2) | | LB | next target (Y) |
+| D-pad | arrows: menu nav + glance | | Start / ⧉ | pause / map |
+| L-trackpad | ↑map ↓notepad ←radar-range →radar-cam | | L4/L5 | engine start / lights |
+| R-trackpad | mouse + click | | R4/R5 | target nearest / binoculars |

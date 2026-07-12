@@ -1,146 +1,110 @@
 #!/usr/bin/env python3
-# Build Interstate '76 "Option 1 (Sim-Combat, analog)" Steam Deck controller config
-# from the neptune WASD template. Uses a real VDF text parser -> tree -> serialize so
-# structure stays valid. Left stick -> analog gamepad; right stick -> glance arrows;
-# triggers/bumpers/faces/dpad/trackpad rebound; trackpad-click + A -> mouse-left.
-import re, sys
+# Option 1 v4 - rebuilt from Valve's template PRESERVING its structure/settings
+# (v3 dropped per-activator settings on the trackpad -> the "double-tap" bug).
+import re
+SRC="/private/tmp/claude-501/-Users-jamesvalentine-Documents-Repositories-mac-gaming-ports/934651c4-e77e-4320-9ab3-d662e6a50483/scratchpad/ref_neptune_wasd.vdf"
+OUT="/private/tmp/claude-501/-Users-jamesvalentine-Documents-Repositories-mac-gaming-ports/934651c4-e77e-4320-9ab3-d662e6a50483/scratchpad/controller_neptune_i76_v4.vdf"
 
-SRC="/private/tmp/claude-501/-Users-jamesvalentine-Documents-Repositories-mac-gaming-ports/b50977da-e002-449c-b723-ede354c6d910/scratchpad/ref_neptune_wasd.vdf"
-OUT="/private/tmp/claude-501/-Users-jamesvalentine-Documents-Repositories-mac-gaming-ports/b50977da-e002-449c-b723-ede354c6d910/scratchpad/i76-deck-bundle/config/controller_neptune_i76_analog.vdf"
-
-# ---- tiny VDF (text KeyValues) parser -> nested list-of-[k,v] (v is str or list) ----
 tok=re.compile(r'"((?:[^"\\]|\\.)*)"|(\{)|(\})')
 def parse(s):
-    pos=0;
     def rd(i):
         out=[]
         while i<len(s):
             m=tok.search(s,i)
             if not m: break
             i=m.end()
-            if m.group(2)=='{':  # shouldn't hit here
-                pass
-            elif m.group(3)=='}':
-                return out,i
-            else:
-                key=m.group(1)
-                m2=tok.search(s,i); i=m2.end()
-                if m2.group(2)=='{':
-                    val,i=rd(i); out.append([key,val])
-                else:
-                    out.append([key,m2.group(1)])
+            if m.group(3)=='}': return out,i
+            key=m.group(1)
+            m2=tok.search(s,i); i=m2.end()
+            if m2.group(2)=='{':
+                val,i=rd(i); out.append([key,val])
+            else: out.append([key,m2.group(1)])
         return out,i
-    root,_=rd(0); return root
-
+    return rd(0)[0]
 def ser(node,d=0):
     t="\t"*d; out=[]
     for k,v in node:
-        if isinstance(v,list):
-            out.append(f'{t}"{k}"\n{t}{{\n{ser(v,d+1)}{t}}}\n')
-        else:
-            out.append(f'{t}"{k}"\t\t"{v}"\n')
+        if isinstance(v,list): out.append(f'{t}"{k}"\n{t}{{\n{ser(v,d+1)}{t}}}\n')
+        else: out.append(f'{t}"{k}"\t\t"{v}"\n')
     return "".join(out)
+def find(n,k):
+    for kv in n:
+        if kv[0]==k: return kv[1]
+def findall(n,k): return [kv[1] for kv in n if kv[0]==k]
+def get_input(g,name): return find(find(g,"inputs"),name)
 
-def find(node,key):
-    for kv in node:
-        if kv[0]==key: return kv[1]
-    return None
-def findall(node,key):
-    return [kv[1] for kv in node if kv[0]==key]
+# Valve-style input block: Full_Press + per-activator settings preserved
+def vinput(binding, extra_activators=None, repeat=False):
+    st=[["repeat_rate","99"],["haptic_intensity","1"]] if repeat else [["haptic_intensity","1"]]
+    acts=[["Full_Press",[["bindings",[["binding",b] for b in (binding if isinstance(binding,list) else [binding])]],
+                         ["settings",st]]]]
+    if extra_activators: acts += extra_activators
+    return [["activators",acts]]
 
 txt=open(SRC,encoding="utf-8-sig").read()
-root=parse(txt)
-cm=find(root,"controller_mappings")
-
-# helper: a simple key_press binding block
-def kb(binding):
-    return [["activators",[["Full_Press",[["bindings",[["binding",binding]]]]]]]]
-
-# groups by id
+root=parse(txt); cm=find(root,"controller_mappings")
 groups={find(g,"id"):g for g in findall(cm,"group")}
 
-def set_input(gid,inp,binding):
-    g=groups[gid]; inputs=find(g,"inputs")
-    for kv in inputs:
-        if kv[0]==inp:
-            kv[1]=kb(binding); return
-    inputs.append([inp,kb(binding)])
+def swap_binding(g,inp,new,label=""):
+    node=get_input(groups[g],inp)
+    for kv in find(find(node,"activators"),"Full_Press"):
+        if kv[0]=="bindings": kv[1]=[["binding",f"{new}, {label}" if label else new]]
 
-def set_mode(gid,mode):
-    for kv in groups[gid]:
-        if kv[0]=="mode": kv[1]=mode; return
+# g0 ABXY
+node=get_input(groups["0"],"button_a")
+for kv in find(find(node,"activators"),"Full_Press"):
+    if kv[0]=="bindings": kv[1]=[["binding","key_press RETURN, Confirm / select"],["binding","mouse_button LEFT, Click / skip"]]
+swap_binding("0","button_b","key_press TAB","Cycle weapon")
+swap_binding("0","button_x","key_press X","Reverse")
+# Y: F3 ext view single, F1 cockpit double
+node=get_input(groups["0"],"button_y")
+for kv in node:
+    if kv[0]=="activators":
+        kv[1]=[["Full_Press",[["bindings",[["binding","key_press F3, External view"]]],["settings",[["haptic_intensity","1"]]]]],
+               ["Double_Press",[["bindings",[["binding","key_press F1, Cockpit view"]]],["settings",[["haptic_intensity","2"]]]]]]
+# g1 left trackpad: keys only, Valve structure intact, NO click input
+swap_binding("1","dpad_north","key_press M","Map")
+swap_binding("1","dpad_south","key_press N","Notepad")
+swap_binding("1","dpad_east","key_press K","Radar camera")
+swap_binding("1","dpad_west","key_press R","Radar range")
+# g2 right trackpad: unchanged (mouse + Soft_Press LMB)
+# g3 left stick -> analog joystick; click = horn
+for kv in groups["3"]:
+    if kv[0]=="mode": kv[1]="joystick_move"
+    if kv[0]=="inputs": kv[1]=[["click",vinput("key_press G, Horn")]]
+    if kv[0]=="settings": kv[1]=[["deadzone_inner_radius","7199"]]
+# g4 L2 -> hardpoint 2 (secondary), keep repeat (hold = keep firing)
+swap_binding("4","edge","key_press 2","Fire secondary (hardpoint 2)")
+# g5 R2 -> fire primary, keep repeat
+swap_binding("5","edge","key_press SPACE","Fire weapon")
+# g6 switches
+swap_binding("6","button_escape","key_press ESCAPE","Pause")     # Start
+swap_binding("6","button_menu","key_press M","Map")              # Select
+swap_binding("6","left_bumper","key_press Y","Next target")      # LB
+swap_binding("6","right_bumper","key_press C","Handbrake")       # RB
+for name,b,l in [("button_back_left","key_press I","Start engine"),
+                 ("button_back_right","key_press T","Target nearest"),
+                 ("button_back_left_upper","key_press H","Headlights"),
+                 ("button_back_right_upper","key_press B","Binoculars")]:
+    node=get_input(groups["6"],name)
+    for kv in find(find(node,"activators"),"Full_Press"):
+        if kv[0]=="bindings": kv[1]=[["binding",f"{b}, {l}"]]
+# g7 dpad: Valve's is ALREADY arrows with proper settings - keep verbatim!
+# g9 right stick -> dpad arrows (glance) + click = look-at-target
+for kv in groups["9"]:
+    if kv[0]=="mode": kv[1]="dpad"
+    if kv[0]=="inputs":
+        kv[1]=[["dpad_north",vinput("key_press UP_ARROW, Glance up")],
+               ["dpad_south",vinput("key_press DOWN_ARROW, Glance down")],
+               ["dpad_east",vinput("key_press RIGHT_ARROW, Glance right")],
+               ["dpad_west",vinput("key_press LEFT_ARROW, Glance left")],
+               ["click",vinput("key_press E, Look at target")]]
+    if kv[0]=="settings": kv[1]=[["requires_click","0"]]
 
-def replace_inputs(gid,pairs):
-    g=groups[gid]
-    for kv in g:
-        if kv[0]=="inputs":
-            kv[1]=[[inp,kb(b)] for inp,b in pairs]; return
-
-# ---- Group 3 = LEFT STICK -> analog gamepad (joystick_move). Movement auto-outputs the
-#      XInput left stick (analog). Click -> handbrake (C). ----
-set_mode("3","joystick_move")
-replace_inputs("3",[("click","key_press C, Handbrake")])
-# ensure a sane deadzone setting exists
-if not find(groups["3"],"settings"):
-    groups["3"].append(["settings",[["deadzone_inner_radius","7199"]]])
-
-# ---- Group 9 = RIGHT STICK -> glance arrows (dpad mode) ----
-set_mode("9","dpad")
-replace_inputs("9",[("dpad_north","key_press UP_ARROW, Glance up"),
-                    ("dpad_south","key_press DOWN_ARROW, Glance down"),
-                    ("dpad_east","key_press RIGHT_ARROW, Glance right"),
-                    ("dpad_west","key_press LEFT_ARROW, Glance left"),
-                    ("click","key_press U, Untarget")])
-
-# ---- Group 0 = ABXY ----
-set_input("0","button_a","mouse_button LEFT, Select / skip cutscene")
-set_input("0","button_b","key_press ESCAPE, Back / pause")
-set_input("0","button_x","key_press X, Reverse")
-set_input("0","button_y","key_press V, Change view")
-
-# ---- Group 4 = LEFT TRIGGER (L2) -> fire-all/linked ; Group 5 = RIGHT TRIGGER (R2) -> fire ----
-replace_inputs("4",[("edge","key_press F, Fire-all / link")])
-replace_inputs("5",[("edge","key_press SPACE, Fire weapon")])
-
-# ---- Group 7 = D-PAD -> engine/lights/horn/binoculars ----
-replace_inputs("7",[("dpad_north","key_press I, Start engine"),
-                    ("dpad_south","key_press H, Headlights"),
-                    ("dpad_west","key_press G, Horn"),
-                    ("dpad_east","key_press B, Binoculars")])
-
-# ---- Group 1 = LEFT TRACKPAD -> systems radial (map/notepad/radar) ----
-replace_inputs("1",[("dpad_north","key_press M, Map"),
-                    ("dpad_south","key_press N, Notepad"),
-                    ("dpad_west","key_press R, Radar range"),
-                    ("dpad_east","key_press K, Radar camera"),
-                    ("click","key_press Y, Next target")])
-
-# ---- Group 2 = RIGHT TRACKPAD -> mouse; make its click a real left-click ----
-for kv in find(groups["2"],"inputs"):
-    if kv[0]=="click": kv[1]=kb("mouse_button LEFT, Click")
-
-# ---- Group 6 = SWITCHES: bumpers, menu/select, rear buttons ----
-set_input("6","left_bumper","key_press T, Target nearest")
-set_input("6","right_bumper","key_press TAB, Change weapon")
-set_input("6","button_menu","key_press ESCAPE, Pause")
-set_input("6","button_escape","key_press M, Map")
-set_input("6","button_back_left","key_press Q, Front target")     # L4
-set_input("6","button_back_right","key_press Y, Next target")     # R4
-set_input("6","button_back_left_upper","key_press PAGE_UP, Zoom out")   # L5
-set_input("6","button_back_right_upper","key_press PAGE_DOWN, Zoom in") # R5
-
-# ---- titles ----
 for kv in cm:
-    if kv[0]=="title": kv[1]="Interstate 76 - Option 1 (Sim-Combat, analog)"
+    if kv[0]=="title": kv[1]="Interstate 76 - Option 1 v4 (Sim-Combat, analog)"
     if kv[0]=="game": kv[1]="Interstate 76"
-
-open(OUT,"w",encoding="utf-8").write('"controller_mappings"\n{\n'+ser(cm,1)+'}\n')
-# validate braces + report bindings
-o=open(OUT).read()
-print("braces:",o.count("{"),o.count("}"),"OK" if o.count("{")==o.count("}") else "MISMATCH")
-print("left stick mode:", find(groups["3"],"mode"))
-print("right stick mode:", find(groups["9"],"mode"))
-import collections
-b=re.findall(r'"binding"\s+"([^"]+)"',o)
-print(f"{len(b)} bindings:")
-for x in b: print("   ",x)
+out='"controller_mappings"\n{\n'+ser(cm,1)+'}\n'
+open(OUT,"w",encoding="utf-8").write('﻿'+out)
+print("braces:",out.count("{"),out.count("}"))
+for x in re.findall(r'"binding"\s+"([^"]+)"',out): print("  ",x)
