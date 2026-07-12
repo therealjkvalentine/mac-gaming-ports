@@ -3,8 +3,9 @@
 Status: **Playable on the free stack** (Sikarugir Wine 10, wow64) — fullscreen-4:3 window,
 in-mission music, clean quit, built-in 20 FPS physics limiter, all verified in play. Not a Steam
 title - GOG release, so no SteamCMD: you supply the game files yourself (see
-[game-data/](game-data/)). **New here? Read [docs/VERIFIED-FIXES.md](docs/VERIFIED-FIXES.md)
-first** — every symptom→cause→fix from this port in one table.
+[game-data/](game-data/)). **New here? Read [docs/README.md](docs/README.md)** (the doc map —
+working vs. parked dead-ends) **and [docs/VERIFIED-FIXES.md](docs/VERIFIED-FIXES.md)** (every
+symptom→cause→fix in one table).
 
 ## The launchers
 
