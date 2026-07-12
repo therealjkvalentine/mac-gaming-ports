@@ -2,8 +2,8 @@
 {
 	"version"		"3"
 	"game"		"Interstate 76"
-	"title"		"Interstate 76 - Option 1 v7 (radials, analog)"
-	"description"		"Sticks: drive (analog) + glance/menus (R3=look at target). R2 fire / L2 weapon-2. RB handbrake, LB target. A confirm, B cycle, X reverse, Y chase cam (2x=cockpit). Dpad: binoculars/horn/engine/lights. LEFT PAD: systems wheel. RIGHT PAD: weapons wheel. Grips = duplicates only. Select=map, Start=pause."
+	"title"		"Interstate 76 - Option 1 v8 (all-in-one wheel)"
+	"description"		"Sticks: drive (analog; L3=Special 1) + glance/menus (R3=look at target). R2 fire / L2 weapon-2. RB handbrake, LB next target. A confirm, B cycle, X reverse, Y chase cam (2x=cockpit). Dpad: binoculars/horn/engine/lights. LEFT PAD: all-functions wheel (labeled). RIGHT PAD: mouse. Grips: targeting (front/untarget/nearest/next). Select=map, Start=pause."
 	"controller_type"		"controller_neptune"
 	"major_revision"		"0"
 	"minor_revision"		"0"
@@ -103,8 +103,8 @@
 	"group"
 	{
 		"id"		"1"
-		"mode"		"radial_menu"
-		"name"		"I76 Systems"
+		"mode"		"touch_menu"
+		"name"		"I76 All Functions"
 		"inputs"
 		{
 			"touch_menu_button_0"
@@ -115,127 +115,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press M, Map"
-						}
-					}
-				}
-			}
-			"touch_menu_button_1"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press N, Notepad"
-						}
-					}
-				}
-			}
-			"touch_menu_button_2"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press R, Radar range"
-						}
-					}
-				}
-			}
-			"touch_menu_button_3"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press K, Radar camera"
-						}
-					}
-				}
-			}
-			"touch_menu_button_4"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press I, Start engine"
-						}
-					}
-				}
-			}
-			"touch_menu_button_5"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press H, Headlights"
-						}
-					}
-				}
-			}
-			"touch_menu_button_6"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press V, Dash toggle"
-						}
-					}
-				}
-			}
-			"touch_menu_button_7"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press Q, Front target"
-						}
-					}
-				}
-			}
-		}
-		"settings"
-		{
-			"touch_menu_button_count"		"8"
-			"touch_menu_opacity"		"100"
-			"touch_menu_scale"		"120"
-			"touchmenu_button_fire_type"		"0"
-		}
-	}
-	"group"
-	{
-		"id"		"2"
-		"mode"		"radial_menu"
-		"name"		"I76 Weapons"
-		"inputs"
-		{
-			"touch_menu_button_0"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press F, FIRE ALL (linked)"
+							"binding"		"key_press F, FIRE ALL"
 						}
 					}
 				}
@@ -274,7 +154,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press 4, Weapon 4"
+							"binding"		"key_press 7, Special 2"
 						}
 					}
 				}
@@ -287,7 +167,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press 5, Weapon 5"
+							"binding"		"key_press 8, Special 3"
 						}
 					}
 				}
@@ -300,7 +180,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press 7, Special 1"
+							"binding"		"key_press M, Map"
 						}
 					}
 				}
@@ -313,12 +193,77 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press 8, Special 2"
+							"binding"		"key_press N, Notepad"
 						}
 					}
 				}
 			}
 			"touch_menu_button_7"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press R, Radar range"
+						}
+					}
+				}
+			}
+			"touch_menu_button_8"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press K, Radar cam"
+						}
+					}
+				}
+			}
+			"touch_menu_button_9"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press I, Start engine"
+						}
+					}
+				}
+			}
+			"touch_menu_button_10"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press H, Headlights"
+						}
+					}
+				}
+			}
+			"touch_menu_button_11"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press V, Dash toggle"
+						}
+					}
+				}
+			}
+			"touch_menu_button_12"
 			{
 				"activators"
 				{
@@ -334,10 +279,43 @@
 		}
 		"settings"
 		{
-			"touch_menu_button_count"		"8"
+			"touch_menu_button_count"		"13"
 			"touch_menu_opacity"		"100"
 			"touch_menu_scale"		"120"
 			"touchmenu_button_fire_type"		"0"
+		}
+	}
+	"group"
+	{
+		"id"		"2"
+		"mode"		"absolute_mouse"
+		"inputs"
+		{
+			"click"
+			{
+				"activators"
+				{
+					"Soft_Press"
+					{
+						"bindings"
+						{
+							"binding"		"mouse_button LEFT"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"1"
+						}
+					}
+				}
+			}
+		}
+		"settings"
+		{
+			"sensitivity"		"145"
+			"doubetap_max_duration"		"320"
+		}
+		"gameactions"
+		{
 		}
 	}
 	"group"
@@ -354,22 +332,11 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press C, Handbrake"
+							"binding"		"key_press 6, Special 1"
 						}
 						"settings"
 						{
 							"haptic_intensity"		"1"
-						}
-					}
-					"Double_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press G, Horn"
-						}
-						"settings"
-						{
-							"haptic_intensity"		"2"
 						}
 					}
 				}
@@ -675,7 +642,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press C, Handbrake (dup)"
+							"binding"		"key_press Q, Front target"
 						}
 					}
 				}
@@ -688,7 +655,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press Y, Next target (dup)"
+							"binding"		"key_press T, Target nearest"
 						}
 					}
 				}
@@ -701,7 +668,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press TAB, Cycle weapon (dup)"
+							"binding"		"key_press U, Untarget"
 						}
 					}
 				}
@@ -714,7 +681,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press SPACE, Fire (dup)"
+							"binding"		"key_press Y, Next target"
 						}
 					}
 				}
