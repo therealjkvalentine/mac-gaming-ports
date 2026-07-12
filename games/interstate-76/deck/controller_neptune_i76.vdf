@@ -2,8 +2,8 @@
 {
 	"version"		"3"
 	"game"		"Interstate 76"
-	"title"		"Interstate 76 - Option 1 v6 (Sim-Combat, analog)"
-	"description"		"Sticks: drive (analog) + glance. R2 fire / L2 secondary. RB handbrake, LB target. A confirm, B cycle weapon, X reverse, Y chase cam (2x tap = cockpit). Dpad: menus + glance; HOLD L4: dpad = dash/horn/engine/lights. L-pad: map/notepad/radar. Select = map, Start = pause."
+	"title"		"Interstate 76 - Option 1 v7 (radials, analog)"
+	"description"		"Sticks: drive (analog) + glance/menus (R3=look at target). R2 fire / L2 weapon-2. RB handbrake, LB target. A confirm, B cycle, X reverse, Y chase cam (2x=cockpit). Dpad: binoculars/horn/engine/lights. LEFT PAD: systems wheel. RIGHT PAD: weapons wheel. Grips = duplicates only. Select=map, Start=pause."
 	"controller_type"		"controller_neptune"
 	"major_revision"		"0"
 	"minor_revision"		"0"
@@ -103,10 +103,11 @@
 	"group"
 	{
 		"id"		"1"
-		"mode"		"dpad"
+		"mode"		"radial_menu"
+		"name"		"I76 Systems"
 		"inputs"
 		{
-			"dpad_north"
+			"touch_menu_button_0"
 			{
 				"activators"
 				{
@@ -116,15 +117,10 @@
 						{
 							"binding"		"key_press M, Map"
 						}
-						"settings"
-						{
-							"repeat_rate"		"99"
-							"haptic_intensity"		"1"
-						}
 					}
 				}
 			}
-			"dpad_south"
+			"touch_menu_button_1"
 			{
 				"activators"
 				{
@@ -134,33 +130,10 @@
 						{
 							"binding"		"key_press N, Notepad"
 						}
-						"settings"
-						{
-							"repeat_rate"		"99"
-							"haptic_intensity"		"1"
-						}
 					}
 				}
 			}
-			"dpad_east"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press K, Radar camera"
-						}
-						"settings"
-						{
-							"repeat_rate"		"99"
-							"haptic_intensity"		"1"
-						}
-					}
-				}
-			}
-			"dpad_west"
+			"touch_menu_button_2"
 			{
 				"activators"
 				{
@@ -170,10 +143,70 @@
 						{
 							"binding"		"key_press R, Radar range"
 						}
-						"settings"
+					}
+				}
+			}
+			"touch_menu_button_3"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
 						{
-							"repeat_rate"		"99"
-							"haptic_intensity"		"1"
+							"binding"		"key_press K, Radar camera"
+						}
+					}
+				}
+			}
+			"touch_menu_button_4"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press I, Start engine"
+						}
+					}
+				}
+			}
+			"touch_menu_button_5"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press H, Headlights"
+						}
+					}
+				}
+			}
+			"touch_menu_button_6"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press V, Dash toggle"
+						}
+					}
+				}
+			}
+			"touch_menu_button_7"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press Q, Front target"
 						}
 					}
 				}
@@ -181,31 +214,119 @@
 		}
 		"settings"
 		{
-			"edge_binding_radius"		"24996"
-		}
-		"gameactions"
-		{
+			"touch_menu_button_count"		"8"
+			"touch_menu_opacity"		"100"
+			"touch_menu_scale"		"120"
+			"touchmenu_button_fire_type"		"0"
 		}
 	}
 	"group"
 	{
 		"id"		"2"
-		"mode"		"absolute_mouse"
+		"mode"		"radial_menu"
+		"name"		"I76 Weapons"
 		"inputs"
 		{
-			"click"
+			"touch_menu_button_0"
 			{
 				"activators"
 				{
-					"Soft_Press"
+					"Full_Press"
 					{
 						"bindings"
 						{
-							"binding"		"mouse_button LEFT"
+							"binding"		"key_press F, FIRE ALL (linked)"
 						}
-						"settings"
+					}
+				}
+			}
+			"touch_menu_button_1"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
 						{
-							"haptic_intensity"		"1"
+							"binding"		"key_press 2, Weapon 2"
+						}
+					}
+				}
+			}
+			"touch_menu_button_2"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press 3, Weapon 3"
+						}
+					}
+				}
+			}
+			"touch_menu_button_3"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press 4, Weapon 4"
+						}
+					}
+				}
+			}
+			"touch_menu_button_4"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press 5, Weapon 5"
+						}
+					}
+				}
+			}
+			"touch_menu_button_5"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press 7, Special 1"
+						}
+					}
+				}
+			}
+			"touch_menu_button_6"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press 8, Special 2"
+						}
+					}
+				}
+			}
+			"touch_menu_button_7"
+			{
+				"activators"
+				{
+					"Full_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press P, Poetry"
 						}
 					}
 				}
@@ -213,11 +334,10 @@
 		}
 		"settings"
 		{
-			"sensitivity"		"145"
-			"doubetap_max_duration"		"320"
-		}
-		"gameactions"
-		{
+			"touch_menu_button_count"		"8"
+			"touch_menu_opacity"		"100"
+			"touch_menu_scale"		"120"
+			"touchmenu_button_fire_type"		"0"
 		}
 	}
 	"group"
@@ -326,7 +446,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press UP_ARROW"
+							"binding"		"key_press B, Binoculars"
 						}
 						"settings"
 						{
@@ -343,7 +463,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press DOWN_ARROW"
+							"binding"		"key_press G, Horn"
 						}
 						"settings"
 						{
@@ -360,7 +480,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press RIGHT_ARROW"
+							"binding"		"key_press H, Headlights"
 						}
 						"settings"
 						{
@@ -377,7 +497,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press LEFT_ARROW"
+							"binding"		"key_press I, Start engine"
 						}
 						"settings"
 						{
@@ -555,11 +675,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"mode_shift dpad 30"
-						}
-						"settings"
-						{
-							"interruptable"		"0"
+							"binding"		"key_press C, Handbrake (dup)"
 						}
 					}
 				}
@@ -572,7 +688,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press T, Target nearest"
+							"binding"		"key_press Y, Next target (dup)"
 						}
 					}
 				}
@@ -585,7 +701,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press H, Headlights"
+							"binding"		"key_press TAB, Cycle weapon (dup)"
 						}
 					}
 				}
@@ -598,91 +714,11 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press B, Binoculars"
+							"binding"		"key_press SPACE, Fire (dup)"
 						}
 					}
 				}
 			}
-		}
-	}
-	"group"
-	{
-		"id"		"30"
-		"mode"		"dpad"
-		"inputs"
-		{
-			"dpad_north"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press V, Dash toggle"
-						}
-						"settings"
-						{
-							"haptic_intensity"		"2"
-						}
-					}
-				}
-			}
-			"dpad_south"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press G, Horn"
-						}
-						"settings"
-						{
-							"haptic_intensity"		"2"
-						}
-					}
-				}
-			}
-			"dpad_west"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press I, Start engine"
-						}
-						"settings"
-						{
-							"haptic_intensity"		"2"
-						}
-					}
-				}
-			}
-			"dpad_east"
-			{
-				"activators"
-				{
-					"Full_Press"
-					{
-						"bindings"
-						{
-							"binding"		"key_press H, Headlights"
-						}
-						"settings"
-						{
-							"haptic_intensity"		"2"
-						}
-					}
-				}
-			}
-		}
-		"settings"
-		{
-			"requires_click"		"0"
 		}
 	}
 	"preset"
@@ -700,7 +736,6 @@
 			"5"		"right_trigger active"
 			"9"		"right_joystick active"
 			"7"		"dpad active"
-			"30"		"dpad active modeshift"
 		}
 	}
 	"settings"

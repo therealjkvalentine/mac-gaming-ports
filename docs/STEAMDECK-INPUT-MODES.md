@@ -468,21 +468,30 @@ GitHub #8904) — always test in Game Mode.
 
 ---
 
-## Sources
+## Sources — dated, for future refresh
 
-Primary (files inspected directly):
+*All sources below were accessed/verified **2026-07-11 → 2026-07-12** against Steam client
+**stable channel on SteamOS 3 (Steam Deck LCD)** and its `controller_neptune` **v3 template
+format**. If you're picking this up years later: (1) re-pull Valve's shipped configs off any
+Deck (`~/.steam/steam/controller_base/`) and diff the syntax against §2/§4's verbatim blocks —
+Valve evolves the format in place; (2) the Steamworks partner docs are versionless and silently
+updated, so treat the verbatim on-Deck files as ground truth over prose; (3) the canonical typos
+(`interruptable`, `doubetap_max_duration`) are load-bearing — if they stop parsing, the format
+version bumped.*
+
+Primary (files inspected directly, 2026-07-11):
 - `~/.steam/steam/controller_base/basicui_neptune.vdf` (Valve, on-Deck) — mode_shift + active modeshift + multi-preset syntax
 - `~/.steam/steam/controller_base/templates/emudeck_controller_steamdeck_radial_menus.vdf` (EmuDeck, on-Deck) — touch/radial menus, activator settings, CHANGE_PRESET, binding label/icon/color fields
 - [GTA V Steam Controller native config](https://github.com/GoldRenard/GTAVSteamControllerNative/blob/master/controller.vdf) — v2 modeshift example
 - [Guild Wars 2 Steam Deck layout](https://github.com/jsantorek/steamdeck-gw2-layout/blob/main/controller_neptune.vdf) — action_layers, hold_layer/remove_layer, touch menus with custom icons
 
-Valve documentation:
+Valve documentation (versionless pages, accessed 2026-07-11):
 - [Steamworks: Mode Shifting](https://partner.steamgames.com/doc/features/steam_controller/mode_shifting)
 - [Steamworks: Action Set Layers](https://partner.steamgames.com/doc/features/steam_controller/action_set_layers)
 - [Steamworks: Activators](https://partner.steamgames.com/doc/features/steam_controller/activators)
 - [Steamworks: Touch Menus](https://partner.steamgames.com/doc/features/steam_controller/touch_menus) / [Radial Menus](https://partner.steamgames.com/doc/features/steam_controller/radial_menus)
 
-Community:
+Community (accessed 2026-07-11):
 - [Guide: Editing .vdf steam controller files](https://steamcommunity.com/sharedfiles/filedetails/?id=932405100) — vdf structure, group_source_bindings states, CHANGE_PRESET 32765
 - [Steam Input Wiki: Changing Things Up](https://github.com/SteamInputWiki/SteamInputWiki/blob/main/chapter-4/changing_things_up.md) — modeshift/set/layer UI + stuck-layer workaround
 - [Steam Controller 112: Introduction to Modeshift](https://steamcommunity.com/sharedfiles/filedetails/?id=1645324863)
