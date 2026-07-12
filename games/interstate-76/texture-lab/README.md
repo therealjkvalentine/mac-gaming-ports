@@ -48,16 +48,21 @@ model crisps edges but speckles tiny gauge text; try `realesrgan-x4plus-anime`, 
 model zoo, or SD img2img at low denoise for better results. Enhance at 4x, then downsample
 back to the original size (the engine can't take bigger files - see the research doc).
 
-## The blend recipe (2026-07-10): 40% original / 35% ESRGAN / 25% sharpened
+## The blend recipe (2026-07-10, FINAL): 47% original / 31% ESRGAN / 22% sharpened
 
 Pure ESRGAN softens fine detail — worst case, it *erases* the radar CRT range
 rings (reads them as noise). The game-wide fix is a per-tile blend, dialled in
-with the interactive tuner (`build_tuner.py`):
+with the interactive tuner (`build_tuner.py`) and shipped in the pack:
 
-- **40% original** — keeps the faithful detail (range rings, gauge text, panel grit)
-- **35% ESRGAN** — the cleanup (removes dither, smooths metal gradients)
-- **25% sharpened** — ESRGAN + *luminance-only* unsharp (crisp edges with **no**
-  blue/colour fringing on saturated edges like the hazard stripes / red HUD bars)
+- **47% original** — keeps the faithful detail (range rings, gauge text, panel grit)
+- **31% ESRGAN** — the cleanup (removes dither, smooths metal gradients)
+- **22% sharpened** — ESRGAN + *luminance-only* unsharp (crisp edges with **no**
+  blue/colour fringing on saturated edges like the hazard stripes / red HUD bars).
+  Sharpen = a **box-blur luminance unsharp, amount 116%, radius 0.8** — the exact
+  math `build_tuner.py`'s slider runs, ported verbatim into `reencode_all.py` so the
+  game-wide bake equals what was approved in the tuner.
+
+*(Earlier drafts used 40/35/25 with a percent-55 Gaussian unsharp; superseded.)*
 
 `reencode_all.py` applies this when given the staging dir as a 5th arg:
 ```sh

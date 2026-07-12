@@ -67,7 +67,7 @@ def _tuner_sharpen(arr):
 
 _cache = {}
 def enhanced_rgba(staged_name, w, h):
-    """Final native RGBA for a tile: 40/35/25 blend if staging available, else pure ESRGAN."""
+    """Final native RGBA for a tile: 47/31/22 blend if staging available, else pure ESRGAN."""
     key = (staged_name, w, h)
     out = _cache.get(key)
     if out is not None:
