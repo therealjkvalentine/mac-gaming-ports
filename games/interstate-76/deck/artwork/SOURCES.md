@@ -7,7 +7,7 @@ Two sets of artwork exist for the non-Steam shortcut:
    publish; the repo ships these as the fallback.
 
 2. **Authentic game art applied on the physical Deck** (2026-07-11) — official/community artwork,
-   **not committed** (it's Activision-copyrighted; personal-library use only). Re-fetch it yourself
+   now **committed in `authentic/`** at the user's request (Activision-copyrighted; will be removed on request). Re-fetch it yourself
    from these sources and drop into `~/.steam/steam/userdata/<id>/config/grid/` named by the
    shortcut appid (`<appid>p.png` portrait, `<appid>.png` header, `<appid>_hero.png`,
    `<appid>_logo.png`, `<appid>_icon.png`):

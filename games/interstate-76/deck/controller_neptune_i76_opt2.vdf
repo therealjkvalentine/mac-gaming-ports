@@ -1,8 +1,8 @@
-"controller_mappings"
+﻿"controller_mappings"
 {
 	"version"		"3"
 	"game"		"Interstate 76"
-	"title"		"Interstate 76 - Option 1 v3 (Sim-Combat, analog)"
+	"title"		"Interstate 76 - Option 2 v1 (Racing: triggers drive)"
 	"description"		"#Description"
 	"controller_type"		"controller_neptune"
 	"major_revision"		"0"
@@ -138,7 +138,7 @@
 						"bindings"
 						{
 							"binding"		"key_press RETURN, Confirm / select"
-							"binding"		"mouse_button LEFT, Click / skip cutscene"
+							"binding"		"mouse_button LEFT, Click / skip"
 						}
 					}
 				}
@@ -151,7 +151,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press ESCAPE, Back / pause"
+							"binding"		"key_press X, Reverse"
 						}
 					}
 				}
@@ -164,7 +164,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press X, Reverse"
+							"binding"		"key_press F, Fire-all / link"
 						}
 					}
 				}
@@ -255,7 +255,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press Y, Next target"
+							"binding"		"key_press U, Untarget"
 						}
 					}
 				}
@@ -312,7 +312,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press C, Handbrake"
+							"binding"		"key_press G, Horn"
 						}
 					}
 				}
@@ -338,7 +338,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press F, Fire-all / link"
+							"binding"		"key_press S, Brake"
 						}
 					}
 				}
@@ -359,7 +359,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press SPACE, Fire weapon"
+							"binding"		"key_press W, Accelerate"
 						}
 					}
 				}
@@ -406,7 +406,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press G, Horn"
+							"binding"		"key_press T, Target nearest"
 						}
 					}
 				}
@@ -419,7 +419,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press B, Binoculars"
+							"binding"		"key_press Y, Next target"
 						}
 					}
 				}
@@ -496,7 +496,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press U, Untarget"
+							"binding"		"key_press B, Binoculars"
 						}
 					}
 				}
@@ -547,7 +547,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press T, Target nearest"
+							"binding"		"key_press TAB, Change weapon"
 						}
 					}
 				}
@@ -560,7 +560,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press TAB, Change weapon"
+							"binding"		"key_press SPACE, Fire weapon"
 						}
 					}
 				}
@@ -586,7 +586,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press Y, Next target"
+							"binding"		"key_press C, Handbrake"
 						}
 					}
 				}
