@@ -91,10 +91,17 @@ MoltenVK and is force-disabled by the async patch).
 4. **If it's near-zero: un-park.** Re-add the Voodoo launcher to the build (one line — see below),
    and consider making it the **default** (it's the prettier mode: gamma + MSAA + higher res).
 
-## Un-parking is one line
+## Un-parking
 
-Nothing was thrown away. To rebuild the Voodoo launcher, restore this line in
-[`build-launchers.sh`](../build-launchers.sh) (it's kept as a comment) and run it:
+> **Note:** [`slim-wrapper.sh`](../slim-wrapper.sh) now removes the **Voodoo GPU stack**
+> (`Contents/Frameworks/renderer/` + `libMoltenVK.dylib` + `moltenvkcx`, ~140 MB) since the
+> software renderer doesn't use it. If you slimmed the wrapper, un-parking also needs that stack
+> back — either `slim-wrapper.sh --restore` (if the quarantine still exists) or a fresh Sikarugir
+> wrapper clone. By the time Voodoo is worth un-parking (a new MoltenVK), you'd rebuild the wrapper
+> on a current Wine/MoltenVK anyway.
+
+The build side is one line. Restore this in [`build-launchers.sh`](../build-launchers.sh) (kept as a
+comment) and run it:
 
 ```sh
 make_app "Interstate 76 - Glide-dgVoodoo-DXVK-Metal" "com.jkv.i76.voodoo" "i76-voodoo-stub.swift" "Interstate 76 - Glide-dgVoodoo-DXVK-Metal"

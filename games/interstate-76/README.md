@@ -47,12 +47,15 @@ VIRTUALCDAUDIO flag does the rest). MP3 decode needs the GStreamer env the stubs
 the exe's action tokens: no radio/music/cd actions, only `track_*` camera-tracking ones. Music is
 mission-scripted; the one knob is the music volume slider in Options.)
 
-**Disk use (~1.6 GB after slimming; ~3.9 GB stock):** the wrapper is self-contained - Wine engine +
-the C: drive prefix + DXVK/MoltenVK frameworks + the game (~470 MB). Because the wrapper is cloned
-from a *Steam* game, stock it carries ~2.3 GB I76 never touches: the whole **Steam client**
-(~1.9 GB - I76 is GOG, launched directly), **wine-mono** (~230 MB .NET) and **wine-gecko**
-(~207 MB browser). [`slim-wrapper.sh`](slim-wrapper.sh) removes them (quarantine → confirm →
-commit; boot-verified in both modes), taking it to ~1.6 GB. The game data is the small part.
+**Disk use (~1.4 GB after slimming; ~3.9 GB stock):** the **game itself is 477 MB**; the rest is
+~850 MB of irreducible Windows/Wine runtime a self-contained no-dependencies `.app` must carry
+(Wine engine 324 MB + `C:\windows` system DLLs 323 MB + GStreamer-for-music & libs ~200 MB). Stock,
+the Steam-game-cloned wrapper also hauls ~2.5 GB I76 never touches: the whole **Steam client**
+(~1.9 GB - I76 is GOG, launched directly), **wine-mono** (~230 MB .NET), **wine-gecko** (~207 MB
+browser), and the **Voodoo GPU stack** (~140 MB renderer backends + MoltenVK - the software
+renderer is CPU→DirectDraw→OpenGL, no Metal). [`slim-wrapper.sh`](slim-wrapper.sh) removes all of it
+(quarantine → confirm → commit; boot+render verified), taking 3.9 GB → **1.4 GB**. 300 MB isn't
+reachable without depending on a system-wide Wine.
 
 Engine: 1997, 32-bit. Renderer tokens baked into the exe: `glide` (ZGLIDE -> bundled OpenGLide ->
 OpenGL), `d3d`, `redline` (software), `powervr`, and an undocumented **`gdi`** (windowed software
