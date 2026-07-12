@@ -48,6 +48,7 @@ it.*
 
 | Doc | What it is |
 |---|---|
+| [MODERN-PORTS-AND-VR.md](MODERN-PORTS-AND-VR.md) | Is there a Direct3D port / VR port? (No.) The native renderers, why D3D is the *worst* mode, the VR verdict, and the live 2026 reimplementations (Open76 fork, Roanish/i76). |
 | [RUNNING-I76-EVERYWHERE.md](RUNNING-I76-EVERYWHERE.md) | Cited compendium of every documented way to run I76 (broad research). |
 | [MAC-SETUP.md](MAC-SETUP.md) | The original Windows→Mac handoff brief. Historical; superseded by VERIFIED-FIXES. |
 | [i76-research-full.txt](i76-research-full.txt) | Raw deep-research dump (FPS/physics/renderers). Historical. |
