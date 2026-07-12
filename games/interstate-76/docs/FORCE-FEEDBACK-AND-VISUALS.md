@@ -1,3 +1,5 @@
+> **STATUS: FFB is a Mac DEAD END** (Wine FFB = Linux evdev only); works on Deck/Windows. The 1024×768 software ceiling here is correct. See [README.md](README.md).
+
 # Interstate '76: force feedback & pushing visual quality
 
 *Deep-research synthesis (2026-07-09, 106 agents, adversarially verified). Answers two questions:

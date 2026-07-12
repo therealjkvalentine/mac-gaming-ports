@@ -1,3 +1,5 @@
+> **STATUS: PARKED on the Mac.** The pipeline/tools work, but true-HD needs an OpenGLide-HD renderer switch away from the software path. A full pack exists on the Windows box. See [README.md](README.md).
+
 # Interstate '76 HD texture pack - research & working pipeline (2026-07-04)
 
 Verdict: **an asset-swap texture pack is fully feasible today, no engine hacks needed.** The

@@ -1,3 +1,5 @@
+> **STATUS (2026-07-11): PARKED / partly superseded.** This is the dgVoodoo saga's root-cause log. Its "future fix: persist the pipeline cache" is now known to be a *floor, not a fix* — the Voodoo mode is parked. See [VOODOO-PARKED.md](VOODOO-PARKED.md) for the settled verdict and [README.md](README.md) for the doc map.
+
 # dgVoodoo2 over Wine's DXGI on Apple Silicon — full research log
 
 *(Interstate '76, Sikarugir Wine 10 (wow64), macOS 26, M5 Pro. Written 2026-07-04, the day of
