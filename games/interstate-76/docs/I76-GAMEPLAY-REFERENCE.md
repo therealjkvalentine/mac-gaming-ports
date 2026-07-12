@@ -43,7 +43,7 @@ the Structo Bumper work on their own.
 Driving: **W/S** throttle (notched — tap, don't hold), **A/D** steer, **Space** handbrake, **X**
 reverse, **`,`/`.`** shift down/up. Weapons: **mouse LeftBtn** = fire (contextual) + forward cannon;
 **RightBtn/MiddleBtn** = hardpoints 2/3; **`2`–`5`** and **`,`/`.`** = hardpoints; **Tab** cycle,
-**F** link. Specials: **`Z` / `7` / `8`** = special 1 / 2 / 3 (nitrous is whichever slot it's in —
+**F** link. Specials: **`6` / `7` / `8`** = special 1 / 2 / 3 (nitrous is whichever slot it's in —
 try each). Camera/glance on the arrow cluster; **I** ignition, **B** binoculars, **M** map, **G**
 horn. Full list: the `input.map` in the game folder.
 
@@ -60,7 +60,7 @@ The only way out of the canyon is a ramp jump, and **jump distance is inversely 
 obstacle). Two things make it:
 1. **Cap to exactly 20 FPS** (Mac: DxWnd Timing → Limit + `50` ms/frame; Windows/Deck: dgVoodoo
    `FPSLimit = 20`). See VERIFIED-FIXES.
-2. **Full acceleration down the hill + hit nitrous** (`Z`/`7`/`8`, whichever slot) on the ramp.
+2. **Full acceleration down the hill + hit nitrous** (`6`/`7`/`8`, whichever slot) on the ramp.
 
 ## The 20-FPS rule (why the whole port caps at 20)
 
