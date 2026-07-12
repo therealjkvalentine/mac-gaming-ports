@@ -1,8 +1,8 @@
-﻿"controller_mappings"
+"controller_mappings"
 {
 	"version"		"3"
 	"game"		"Interstate 76"
-	"title"		"Interstate 76 - Option 1 v4 (Sim-Combat, analog)"
+	"title"		"Interstate 76 - Option 1 v5 (Sim-Combat, analog)"
 	"description"		"#Description"
 	"controller_type"		"controller_neptune"
 	"major_revision"		"0"
@@ -189,7 +189,7 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press F3, External view"
+							"binding"		"key_press F2, Chase view"
 						}
 						"settings"
 						{
@@ -350,11 +350,22 @@
 					{
 						"bindings"
 						{
-							"binding"		"key_press G, Horn"
+							"binding"		"key_press C, Handbrake"
 						}
 						"settings"
 						{
 							"haptic_intensity"		"1"
+						}
+					}
+					"Double_Press"
+					{
+						"bindings"
+						{
+							"binding"		"key_press G, Horn"
+						}
+						"settings"
+						{
+							"haptic_intensity"		"2"
 						}
 					}
 				}
