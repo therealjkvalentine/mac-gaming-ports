@@ -6,15 +6,20 @@ title - GOG release, so no SteamCMD: you supply the game files yourself (see
 [game-data/](game-data/)). **New here? Read [docs/VERIFIED-FIXES.md](docs/VERIFIED-FIXES.md)
 first** — every symptom→cause→fix from this port in one table.
 
-## The three launchers
+## The launchers
 
 Built/installed by [`build-launchers.sh`](build-launchers.sh) into `~/Applications/Sikarugir/`:
 
 | App | What it is |
 |---|---|
-| **`Interstate 76 - Software (DxWnd).app`** | **The daily driver.** DxWnd wraps the software renderer into a big screen-filling 4:3 window (black bars, title bar, draggable). Double-click → straight into the game (`dxwnd.exe /R:1`, headless). Quitting (in-game EXIT, or closing the window) tears down *everything* — no leftover black window. |
-| **`Interstate 76 - Glide-dgVoodoo-DXVK-Metal.app`** | **The pretty mode.** The game's native 3dfx Glide renderer through dgVoodoo 2.78.2 → DXVK → Metal: **bright 3dfx gamma, 4× MSAA, 32-bit skies**, 2× internal resolution ([dgVoodoo.conf](dgVoodoo.conf); see [docs/VISUAL-QUALITY-MAC.md](docs/VISUAL-QUALITY-MAC.md)). Cost: pipeline-compile hitches on first-seen content — warm after a one-time break-in run (see below). |
+| **`Interstate 76 - Software (DxWnd).app`** | **The Mac build.** DxWnd wraps the software renderer into a big screen-filling 4:3 window (black bars, title bar, draggable). Double-click → straight into the game (`dxwnd.exe /R:1`, headless). Instant start, zero shader compile. Quitting (in-game EXIT, closing the window, *or* cmd-Q on the app) tears down *everything* — no leftover black window. |
 | **`Interstate 76 - DxWnd Settings.app`** | The DxWnd GUI for tweaking the profile (select the "Interstate 76" row → Edit; settings map in [docs/DXWND-TUNING.md](docs/DXWND-TUNING.md)). Changes save to the live `dxwnd.ini`. |
+
+> **The "Voodoo" Glide→Metal mode is parked.** It worked and looked great (bright 3dfx gamma, MSAA,
+> higher res) but has one unfixable-from-here showstopper: MoltenVK can't persist compiled Metal
+> pipelines, so every launch re-pays a shader compile. Full ledger + the exact announcement that
+> un-parks it (one-line rebuild): **[docs/VOODOO-PARKED.md](docs/VOODOO-PARKED.md)**. The pretty
+> Glide path lives happily on the **[Steam Deck](docs/STEAMDECK.md)** (native Vulkan, no MoltenVK).
 
 One-time setup: [`setup-dxwnd.sh`](setup-dxwnd.sh) (installs DxWnd + our
 [profile](interstate-76.dxw)), [`setup-music.sh`](setup-music.sh) (in-mission music, see below),
@@ -87,35 +92,19 @@ in Settings and quit via the in-game EXIT instead (the stub reaps either way).*
 **Colors:** the software renderer lacks the 3dfx gamma lift, so it runs darker than the
 Glide/Windows look - the game's own brightness setting (Options -> Graphic Detail) compensates.
 
-## The Voodoo mode (`Interstate 76 - Glide-dgVoodoo-DXVK-Metal.app`) — bright 3dfx, and how the warmup dies
+## The Voodoo (Glide→Metal) mode — parked
 
-The dgVoodoo path now ships as its own launcher: `i76.exe -glide` → dgVoodoo 2.78.2 `Glide2x.dll`
-→ D3D11 FL10.1 → DXVK (swapped into the engine) → MoltenVK/Metal. Bright 3dfx gamma, 2x internal
-resolution (`dgVoodoo.conf Resolution = 2x`), filtered textures, real title-barred window,
-`FPSLimit=20` belt-and-braces.
-
-**The warmup, honestly:** first-seen effects compile GPU pipelines (DXVK → SPIR-V → MoltenVK →
-MSL → Metal). Measured cold: ~70 s of 0.2-0.4 fps in the first mission even with DXVK **async**
-compilation active (12 threads) and MoltenVK concurrent compile on. What ships against it:
-
-1. **DXVK async** (`dxvk.conf: dxvk.enableAsync = true`) — compiles on background threads.
-2. **DXVK state cache** (`i76.dxvk-cache` next to the exe) — every pipeline you've ever triggered
-   is *precompiled at the next launch during the boot/menu minute*. So the crawl is a **one-time
-   break-in**: play a mission (accept the hitches once, let it see explosions/smoke/night), and
-   later sessions start warm. Earlier "70 s every session" measurements were made with a nearly
-   empty cache — grow it and it stops.
-3. **In progress — the true kill:** a patched DXVK that persists the *Vulkan pipeline cache*
-   (where MoltenVK stores its converted MSL) to disk, making even the precompile near-free. See
-   [docs/DXGI-DGVOODOO-RESEARCH.md](docs/DXGI-DGVOODOO-RESEARCH.md) for the mechanism and
-   `tools/dxvk-pipeline-cache-persist/` once it lands.
-
-**OpenGLide `-glide`** (GOG's bundled wrapper) remains the parked alternative: bright and instant
-- but exclusive-fullscreen, so borderless + minimizes on every focus loss (Wine hardcoded;
-`WindowsFloatWhenInactive=all` softens it at the cost of other window weirdness).
-
-Full battle log, root causes (incl. the three-condition dgVoodoo-under-Wine recipe and the
-Sikarugir launcher's Glide-fatal `CX_FWD_COMPAT_GL_CTX=1`):
-[docs/DXGI-DGVOODOO-RESEARCH.md](docs/DXGI-DGVOODOO-RESEARCH.md).
+The dgVoodoo path (`i76.exe -glide` → dgVoodoo 2.78.2 → DXVK → MoltenVK → Metal) got fully working
+and looked great — bright 3dfx gamma, 4× MSAA, 32-bit, higher internal res — but every launch
+re-pays a MoltenVK shader compile that **cannot be persisted** across runs, so it's parked in favor
+of the instant-start software renderer. The complete ledger (how far we got, the exact blocker, the
+one MoltenVK announcement that un-parks it, and the un-park playbook) is in
+**[docs/VOODOO-PARKED.md](docs/VOODOO-PARKED.md)**. The battle log / root causes (the
+three-condition dgVoodoo-under-Wine recipe, the Sikarugir launcher's Glide-fatal
+`CX_FWD_COMPAT_GL_CTX=1`, the visual wins) live in
+[docs/DXGI-DGVOODOO-RESEARCH.md](docs/DXGI-DGVOODOO-RESEARCH.md) +
+[docs/VISUAL-QUALITY-MAC.md](docs/VISUAL-QUALITY-MAC.md). The pretty Glide path runs great on the
+**[Steam Deck](docs/STEAMDECK.md)** (native Vulkan, no MoltenVK tax).
 
 Sources: [Wine fullscreen focus-loss behavior](https://forum.winehq.org/viewtopic.php?t=20646),
 [SDL issue on the broken restore](https://github.com/libsdl-org/SDL/issues/5320),

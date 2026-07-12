@@ -61,11 +61,14 @@ make_app() { # $1=dir-name $2=bundle-id $3=swift-src $4=display-name
 EOF
     codesign -f -s - "$B/MacOS/$1"
 }
-make_app "Interstate 76 - Glide-dgVoodoo-DXVK-Metal" "com.jkv.i76.voodoo"   "i76-voodoo-stub.swift"   "Interstate 76 - Glide-dgVoodoo-DXVK-Metal"
+# Voodoo (dgVoodoo Glide -> DXVK -> MoltenVK -> Metal) is PARKED on the Mac - the
+# per-launch MoltenVK shader compile can't be persisted (docs/VOODOO-PARKED.md).
+# To un-park when MoltenVK gains MTLBinaryArchive/VK_KHR_pipeline_binary, restore:
+# make_app "Interstate 76 - Glide-dgVoodoo-DXVK-Metal" "com.jkv.i76.voodoo" "i76-voodoo-stub.swift" "Interstate 76 - Glide-dgVoodoo-DXVK-Metal"
 make_app "Interstate 76 - DxWnd Settings"            "com.jkv.i76.settings" "i76-settings-stub.swift" "Interstate 76 - DxWnd Settings"
 
 rm -rf "$TMP"
 echo "Installed:"
-echo "  $APP                     (play - DxWnd big window)"
-echo "  $SIK/Interstate 76 - Glide-dgVoodoo-DXVK-Metal.app          (play - dgVoodoo Glide, pretty mode)"
-echo "  $SIK/Interstate 76 - DxWnd Settings.app  (tweak DxWnd options)"
+echo "  $APP   (play - software renderer via DxWnd, big 4:3 window)"
+echo "  $SIK/Interstate 76 - DxWnd Settings.app   (tweak the DxWnd profile)"
+echo "  (Voodoo/Glide mode is parked - see docs/VOODOO-PARKED.md)"
