@@ -41,27 +41,41 @@ func setupEnv(_ A: String) {
     setenv("GST_REGISTRY_1_0", A + "/Contents/SharedSupport/prefix/gst-registry.bin", 1)
 }
 
-func running(_ pattern: String) -> Bool {
+func pids(_ pattern: String) -> [Int32] {
     let t = Process()
     t.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
     t.arguments = ["-f", pattern]
-    t.standardOutput = FileHandle.nullDevice
-    t.standardError = FileHandle.nullDevice
-    guard (try? t.run()) != nil else { return false }
+    let pipe = Pipe(); t.standardOutput = pipe; t.standardError = FileHandle.nullDevice
+    guard (try? t.run()) != nil else { return [] }
     t.waitUntilExit()
-    return t.terminationStatus == 0
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    return String(data: data, encoding: .utf8)?.split(separator: "\n").compactMap { Int32($0) } ?? []
 }
+func running(_ pattern: String) -> Bool { !pids(pattern).isEmpty }
 
+// Reap runs once - from the play-loop exit (game quit) OR the signal handler (app
+// quit / cmd-Q). Guard against double-run.
+var reaped = false
+let reapLock = NSLock()
 func reap(_ A: String) {
+    reapLock.lock(); if reaped { reapLock.unlock(); return }; reaped = true; reapLock.unlock()
     let k = Process()
     k.executableURL = URL(fileURLWithPath: A + "/Contents/SharedSupport/wine/bin/wineserver")
     k.arguments = ["-k"]
     try? k.run(); k.waitUntilExit()
-    Thread.sleep(forTimeInterval: 1)
-    // Sweep survivors that reference THIS bundle (never touches other prefixes/games).
-    // BUT: if the user already relaunched (new i76/dxwnd session up), skip the sweep -
-    // a stale sweep would murder the fresh session; its own stub will clean up.
-    if running("i76\\.exe") || running("dxwnd\\.exe") { return }
+    // wineserver -k can take a few seconds; POLL for the session to actually die
+    // rather than bail early (the old bug: dxwnd mid-death read as "still up").
+    for _ in 0..<8 {
+        Thread.sleep(forTimeInterval: 1)
+        if !running("dxwnd\\.exe") && !running("i76\\.exe") { break }
+    }
+    // Only skip the bundle sweep for a genuine RELAUNCH - i.e. a SECOND stub (new
+    // Sikarugir process) is now managing a fresh session. dxwnd being slow to die is
+    // NOT a relaunch. Sweep otherwise so nothing (dxwnd host, hider backdrop,
+    // winedevice, explorer) is ever left on screen.
+    let myPid = ProcessInfo.processInfo.processIdentifier
+    let otherStubs = pids(A + "/Contents/MacOS/Sikarugir").filter { $0 != myPid }
+    if !otherStubs.isEmpty { return }
     let s = Process()
     s.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
     s.arguments = ["-9", "-f", A + "/Contents/SharedSupport"]
@@ -69,6 +83,21 @@ func reap(_ A: String) {
 }
 
 setupEnv(A)
+
+// Reap on app-quit too (cmd-Q / Dock quit / LaunchServices logout sends SIGTERM;
+// SIGINT for good measure). Without this, quitting the .app while the game runs
+// would orphan the wine session + leave the window. DispatchSource handlers run on
+// a queue (safe to spawn Process, unlike a raw C signal handler).
+var signalSources: [DispatchSourceSignal] = []
+for sig in [SIGTERM, SIGINT] {
+    signal(sig, SIG_IGN)  // ignore default action; the source handles it
+    let src = DispatchSource.makeSignalSource(signal: sig, queue: .global())
+    src.setEventHandler { reap(A); exit(0) }
+    src.resume()
+    // keep the source alive for the process lifetime
+    signalSources.append(src)
+}
+
 let p = Process()
 p.executableURL = URL(fileURLWithPath: A + "/Contents/SharedSupport/wine/bin/wine")
 p.arguments = ["C:\\dxwnd\\dxwnd.exe", "/R:1"]
