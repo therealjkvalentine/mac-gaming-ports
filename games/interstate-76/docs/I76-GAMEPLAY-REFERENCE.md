@@ -48,8 +48,22 @@ try each). Camera/glance on the arrow cluster; **I** ignition, **B** binoculars,
 horn. Full list: the `input.map` in the game folder.
 
 **Rebinding:** edit `input.map` directly (the in-game Control Configuration menu is buggy — see
-VERIFIED-FIXES). Valid key tokens include letters, numbers, `Space Enter Tab Comma Period Minus
-Equal` and the `Grey*` arrow/keypad names. `Shift`/`Control` are modifiers, not primary keys.
+VERIFIED-FIXES), then **relaunch**. Valid key tokens include letters, numbers, `Space Enter Tab
+Comma Period Minus Equal` and the `Grey*` arrow/keypad names. `Shift`/`Control` are modifiers, not
+primary keys.
+
+> **⚠️ The chord trap (bit us on `special1`):** multiple `+` lines *inside one block* mean **all
+> of them at once** (a chord). To give an action **alternative** bindings (key OR button), use
+> **separate blocks**:
+> ```
+> special1 { + keyboard Six }      ← 6 works on its own
+> special1 { + joystick1 Button2 } ← OR the pad button
+> ```
+> vs. the broken chord (`6` did nothing because it wanted 6 AND the button together):
+> ```
+> special1 { + keyboard Six
+>            + joystick1 Button2 } ← chord: BOTH required
+> ```
 `nitrous_on`/`nitrous_off` are **NOT** bindable input actions (they're internal engine states) —
 nitrous is triggered through a **special** slot, not a "nitrous key."
 
