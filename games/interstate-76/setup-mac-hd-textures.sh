@@ -21,7 +21,7 @@ find_addons() {
     # every I76 wrapper prefix under the usual Sikarugir/Kegworks locations
     for base in "$HOME/Applications/Sikarugir" "$HOME/Applications" "/Applications"; do
         [ -d "$base" ] || continue
-        find "$base" -maxdepth 4 -type d -path '*drive_c/GOG Games/Interstate 76' 2>/dev/null
+        find "$base" -maxdepth 8 -type d -path '*drive_c/GOG Games/Interstate 76' 2>/dev/null
     done | sort -u
 }
 

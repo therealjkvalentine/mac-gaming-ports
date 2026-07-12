@@ -39,6 +39,7 @@ it.*
 | Doc | What it is |
 |---|---|
 | [STEAMDECK.md](STEAMDECK.md) | **Installed & working on the Deck.** Heroic+Proton+dgVoodoo; the Glide path runs great (native Vulkan). |
+| [GAMEPAD-PC-MAC.md](GAMEPAD-PC-MAC.md) | Xbox gamepad on **PC & Mac** via the native winmm-joystick path (axes/buttons already in input.map). |
 | [DECK-CONTROLS.md](DECK-CONTROLS.md) / [DECK-INPUT-SCIENCE.md](DECK-INPUT-SCIENCE.md) | Deck controller layout + the input pipeline. |
 | [WINDOWS-PLAYBOOK.md](WINDOWS-PLAYBOOK.md) | Windows-box max graphics / FFB / frame-gen playbook. |
 | [FINDINGS-2026-07-WINDOWS-AND-TEXTURES.md](FINDINGS-2026-07-WINDOWS-AND-TEXTURES.md) | Windows results + the M16 texture-format crack + texture-replacement pipeline. |
