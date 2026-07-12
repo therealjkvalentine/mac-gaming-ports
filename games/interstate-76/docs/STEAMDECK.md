@@ -14,6 +14,26 @@ transfers — minus the one layer that caused us the most pain.*
 > [remap-controller.py](../deck/remap-controller.py)). **Left for the user: launch it once (Proton
 > builds the prefix + primes shaders), and apply the controller config (3 taps, below).**
 
+## Stupid-easy install (BETA — for anyone with a Deck + the GOG game)
+
+1. **Buy [Interstate '76 on GOG](https://www.gog.com/game/interstate_76)** and download the
+   **offline installer** (`setup_interstate_76_...exe`) to `~/Downloads` using the Deck's
+   Desktop-Mode browser.
+2. In Desktop Mode, download and double-click
+   [`Install-I76.desktop`](../deck/Install-I76.desktop) — or run the one-liner:
+   ```
+   curl -Ls https://raw.githubusercontent.com/therealjkvalentine/mac-gaming-ports/main/games/interstate-76/deck/deck-install.sh | bash
+   ```
+   The zenity-guided installer ([source](../deck/deck-install.sh)) extracts YOUR installer
+   (static innoextract, fetched at run time), fetches dgVoodoo 2.78.2 from the public mirror,
+   applies our tuned configs + Deck input.map, auto-detects your Steam user + GE-Proton (downloads
+   it if missing), registers the game with artwork, and **pre-applies the controller layout with
+   zero taps** (the Steam-ROM-Manager `configset` mechanism). No game content is redistributed.
+3. Switch to **Game Mode**, set QAM → Framerate Limit = **20**, play.
+
+*Advanced controller techniques used here (mode shifts, touch menus, activators, portability) are
+documented for reuse across ports in [docs/STEAMDECK-INPUT-MODES.md](../../../docs/STEAMDECK-INPUT-MODES.md).*
+
 ## Controller layout (installed as a template — apply once)
 
 Every I76 control is mapped to a Deck input in the conventional driving/vehicular-combat idiom.

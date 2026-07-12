@@ -5,14 +5,40 @@
 # RUN WITH STEAM SHUT DOWN.
 import os, sys, zlib, struct, shutil, glob, re, time
 
-USERCFG = os.path.expanduser("~/.steam/steam/userdata/121224686/config")
+def _detect_userid():
+    env = os.environ.get("STEAM_USERID")
+    if env: return env
+    base = os.path.expanduser("~/.steam/steam/userdata")
+    cands = [d for d in (os.listdir(base) if os.path.isdir(base) else [])
+             if d.isdigit() and d != "0"
+             and os.path.exists(os.path.join(base, d, "config", "shortcuts.vdf"))]
+    if not cands:
+        cands = [d for d in os.listdir(base) if d.isdigit() and d != "0"]
+    if not cands:
+        raise SystemExit("no Steam user found under userdata/")
+    # newest localconfig.vdf wins (most recently used account)
+    cands.sort(key=lambda d: os.path.getmtime(os.path.join(base, d, "config", "localconfig.vdf"))
+               if os.path.exists(os.path.join(base, d, "config", "localconfig.vdf")) else 0,
+               reverse=True)
+    return cands[0]
+
+STEAM_USERID = _detect_userid()
+USERCFG = os.path.expanduser(f"~/.steam/steam/userdata/{STEAM_USERID}/config")
 STEAMCFG = os.path.expanduser("~/.steam/steam/config")
 TEMPLATES = os.path.expanduser("~/.steam/steam/controller_base/templates")
 BUNDLE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GAMEDIR = os.path.expanduser("~/Games/Interstate76/game")
 EXE = os.path.join(GAMEDIR, "i76.exe")
 NAME = "Interstate 76"
-COMPAT = "GE-Proton10-12"
+def _detect_compat():
+    env = os.environ.get("I76_COMPAT")
+    if env: return env
+    ct = os.path.expanduser("~/.steam/steam/compatibilitytools.d")
+    ge = sorted([d for d in (os.listdir(ct) if os.path.isdir(ct) else [])
+                 if d.startswith("GE-Proton")], reverse=True)
+    return ge[0] if ge else "proton_experimental"
+
+COMPAT = _detect_compat()
 
 # ---------- binary VDF (KeyValues) ----------
 def read_str(b, i):
@@ -125,6 +151,32 @@ def main():
     if os.path.exists(cc) and os.path.isdir(TEMPLATES):
         shutil.copy2(cc, os.path.join(TEMPLATES,"controller_neptune_i76.vdf"))
         print("controller template installed (selectable in-game as 'Interstate 76 (full driving+combat)')")
-    print("DONE. Restart Steam.")
+    # ---------- ZERO-TAP controller apply (Steam ROM Manager mechanism) ----------
+    # configset_controller_neptune.vdf maps lowercased app name -> template file.
+    try:
+        csdir = os.path.expanduser(
+            f"~/.steam/steam/steamapps/common/Steam Controller Configs/{STEAM_USERID}/config")
+        os.makedirs(csdir, exist_ok=True)
+        cs = os.path.join(csdir, "configset_controller_neptune.vdf")
+        key = NAME.lower()
+        entry = '\t"%s"\n\t{\n\t\t"template"\t\t"controller_neptune_i76.vdf"\n\t}\n' % key
+        if os.path.exists(cs):
+            body = open(cs, encoding="utf-8", errors="replace").read()
+            if key not in body.lower():
+                body = body.rstrip()
+                if body.endswith("}"):
+                    body = body[:-1] + entry + "}\n"
+                shutil.copy2(cs, cs + ".i76bak")
+                open(cs, "w", encoding="utf-8").write(body)
+                print("controller config AUTO-APPLIED via configset (zero taps)")
+            else:
+                print("configset already maps the app")
+        else:
+            open(cs, "w", encoding="utf-8").write(
+                '"controller_config"\n{\n' + entry + "}\n")
+            print("configset created; controller config AUTO-APPLIED (zero taps)")
+    except Exception as e:
+        print("configset step skipped:", e, "- apply the template manually (3 taps)")
+    print(f"DONE (user {STEAM_USERID}, compat {COMPAT}). Restart Steam.")
 
 if __name__=="__main__": main()
