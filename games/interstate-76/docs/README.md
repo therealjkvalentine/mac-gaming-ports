@@ -20,6 +20,7 @@ it.*
 
 | Doc | What it is |
 |---|---|
+| **[I76-GAMEPLAY-REFERENCE.md](I76-GAMEPLAY-REFERENCE.md)** | Controls, weapons/hardpoints, specials (nitrous/bumpers), the Mission 5 jump - the gameplay facts that trip people up. |
 | **[VERIFIED-FIXES.md](VERIFIED-FIXES.md)** | **START HERE.** Every symptom→cause→fix that shipped, one table. The source of truth for what works. |
 | [DXWND-TUNING.md](DXWND-TUNING.md) | DxWnd profile settings, grounded in the v2.06.14 source (aspect/letterbox/renderer). |
 
