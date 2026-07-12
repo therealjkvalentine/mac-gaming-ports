@@ -31,9 +31,15 @@ The community-standard guide is [CahootsMalone's I76+dgVoodoo walkthrough](https
    "texture panics"/corruption ([VOGONS t=70951](https://www.vogons.org/viewtopic.php?t=70951)).
 3. **Glide gamma ramp: ON** (this is the bright 3dfx look), **force true PCI access: ON**,
    **vSync: ON**.
-4. **FPSLimit = 20** in dgVoodoo.conf — belt-and-braces (the GOG 2019 exe already ships the AiO
-   20fps limiter, see VERIFIED-FIXES.md). Above ~30fps: jump physics, flamethrower, mortar range
-   and AI driving all break ([Local Ditch FAQ](https://www.localditch.com/interstate-76/faq.html)).
+4. **FPSLimit = 20** in dgVoodoo.conf — and here **dgVoodoo's limiter is the one that matters**,
+   not just belt-and-braces. The exe's AiO limiter overshoots slightly (measured **~20.66** on the
+   Mac software path), and **the Mission 5 canyon jump falls just short at anything over exactly 20**
+   — jump distance is inversely tied to framerate ([Local Ditch: FPS jumping](https://www.localditch.com/posts/fps-jumping/)).
+   dgVoodoo `FPSLimit = 20` caps the Glide buffer-swap precisely at 20, so the physics loop runs at a
+   true 20 and the jump works. **Do not raise it.** Above ~30fps: jump physics, flamethrower, mortar
+   range and AI driving all break ([Local Ditch FAQ](https://www.localditch.com/interstate-76/faq.html)).
+   *(Nitrous helps on the ramp — bind `nitrous_on`/`nitrous_off` in `input.map`; this build ships
+   them unbound.)*
 5. **Resolution: force any 4:3 value** — dgVoodoo accepts dynamic specifiers (`2x`, `3x`, `Max`,
    `Max ISF`) and custom strings like `2560x1920, 60`
    ([dgVoodoo ReadmeGeneral](https://dege.freeweb.hu/dgVoodoo2/ReadmeGeneral/)). Start at `2x`,
@@ -56,6 +62,11 @@ The community-standard guide is [CahootsMalone's I76+dgVoodoo walkthrough](https
 
 The 20fps cap is physics-load-bearing and cannot be raised. The only way to *smoother-looking*
 motion is frame interpolation on top:
+
+> **Frame-gen does NOT change the physics base — keep `FPSLimit = 20`.** LSFG's 20→40 (or →60)
+> are *interpolated display frames*; the game still simulates at the 20fps base dgVoodoo enforces,
+> so the Mission 5 jump and all physics stay correct. Never "fix" smoothness by raising FPSLimit —
+> that breaks the jump. Interpolate on top of 20, don't run the sim above it.
 
 - **The realistic path: [Lossless Scaling](https://store.steampowered.com/app/993090/) (LSFG),
   ~$7.** Capture-based (WGC/DXGI desktop capture): it doesn't care that the game is from 1997 —

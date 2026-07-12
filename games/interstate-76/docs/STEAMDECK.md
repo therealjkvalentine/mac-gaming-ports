@@ -122,11 +122,14 @@ and copy in the exact `dgVoodoo.conf` and `input.map` we already validated on th
      image and no MSAA/gamma levers — dgVoodoo is the quality path.
 4. **Launch flag:** set the game's launch to `i76.exe -glide` (Heroic: "Alternative Exe" / launch
    arguments). `-glide` selects the 3dfx renderer dgVoodoo wraps.
-5. **20 FPS cap (belt-and-braces):** the exe's `I76PATCH.DLL` already caps at 20; our
-   `dgVoodoo.conf` also sets `FPSLimit = 20`; and you can add the **Deck's own frame limiter** (QAM
-   → Performance → Framerate Limit → 20, or per-game). Any one suffices; stacking is harmless.
-   *Why it matters:* above ~25–30 FPS I76's physics break (cars flip, jumps/flamethrower/mortar
-   misbehave) — [Local Ditch FAQ](https://www.localditch.com/interstate-76/faq.html).
+5. **20 FPS cap — EXACTLY 20 (the Mission 5 jump depends on it):** our `dgVoodoo.conf` sets
+   `FPSLimit = 20`, which is the precise one (the exe's `I76PATCH.DLL` limiter overshoots to ~20.66,
+   and the **Mission 5 canyon jump falls just short at anything over 20** — jump distance is inversely
+   tied to framerate, [Local Ditch: FPS jumping](https://www.localditch.com/posts/fps-jumping/)). Set
+   the Deck's **QAM → Framerate Limit → 20** as well (belt-and-braces). **Don't raise it.** Above
+   ~25–30 FPS everything breaks (cars flip, jumps/flamethrower/mortar misbehave) —
+   [Local Ditch FAQ](https://www.localditch.com/interstate-76/faq.html). *(Nitrous helps on the ramp:
+   bind `nitrous_on`/`nitrous_off` in the Deck `input.map` — this build ships them unbound.)*
 6. **Controls:** see the Steam Input section.
 7. **Test in Instant Melee first** (physics sanity), then a mission.
 
