@@ -61,9 +61,10 @@ setenv("MVK_CONFIG_SHOULD_MAXIMIZE_CONCURRENT_COMPILATION", "1", 1)
 // FAST_MATH forced on (default 2 = per-shader opt-out): marginally simpler codegen,
 // slightly faster Metal compile. IEEE NaN/Inf edge cases are irrelevant for a '97 game.
 setenv("MVK_CONFIG_FAST_MATH_ENABLED", "1", 1)
-// Decouple submit/present from the render thread (default 1 = on calling thread) so a
-// compile burst can't stall pacing. Medium-risk experiment - revert if frames judder.
-setenv("MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", "0", 1)
+// Keep submits SYNCHRONOUS on the calling thread (=1, the default). We tried the
+// decoupled/async path (=0) and it measured slightly SLOWER here (worse pacing), so
+// synchronous wins on this stack. Set explicitly to pin it.
+setenv("MVK_CONFIG_SYNCHRONOUS_QUEUE_SUBMITS", "1", 1)
 setenv("DXVK_STATE_CACHE", "1", 1)
 
 func running(_ pattern: String) -> Bool {
