@@ -24,6 +24,24 @@
 // still referencing this bundle (dxwnd host, backdrop owner, winedevice, explorer).
 // Build:  swiftc -O -o /tmp/stub i76-launch-stub.swift
 import Foundation
+import CoreGraphics
+
+// Count large wine-owned windows on screen. During play there are TWO (the game's
+// render window + DxWnd's full-desktop "hider" backdrop); on in-game EXIT the render
+// window closes to the black hider (count drops to 1) while i76.exe often HANGS
+// mid-shutdown - so process-exit alone never fires. Owner name + bounds are readable
+// WITHOUT Screen Recording permission (window titles are not, so we key off size).
+func largeWineWindows() -> Int {
+    guard let list = CGWindowListCopyWindowInfo([.optionAll], kCGNullWindowID) as? [[String: Any]]
+    else { return 99 }
+    var n = 0
+    for w in list {
+        let owner = (w[kCGWindowOwnerName as String] as? String ?? "").lowercased()
+        let b = w[kCGWindowBounds as String] as? [String: Double] ?? [:]
+        if owner.contains("wine") && (b["Width"] ?? 0) > 600 && (b["Height"] ?? 0) > 400 { n += 1 }
+    }
+    return n
+}
 
 let exe = URL(fileURLWithPath: CommandLine.arguments[0]).resolvingSymlinksInPath()
 let A = exe.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().path
@@ -111,9 +129,22 @@ for _ in 0..<120 {
     if running("i76\\.exe") { booted = true; break }
     if !p.isRunning && !running("dxwnd\\.exe") { break }  // launch failed outright
 }
-// Play phase: wait until the game process is gone (menu EXIT, or window-X ->
-// DxWnd Terminate-on-close kills it).
-while booted && running("i76\\.exe") {
+// Play phase: reap when the game is DONE by either signal -
+//  (a) i76.exe fully exits (clean quit), OR
+//  (b) the game's render window vanishes (leaving only the black "hider") while
+//      i76.exe hangs on shutdown - the "EXIT -> black screen -> force-quit" bug.
+// (b) is why cmd-Q "just went to the menu": the window is owned by winemac's "wine"
+// app, not us, so our SIGTERM never fired - now we watch the window directly.
+var sawTwo = false
+var lowStreak = 0
+while booted {
     Thread.sleep(forTimeInterval: 2)
+    if !running("i76\\.exe") { break }                 // (a) process gone
+    let n = largeWineWindows()
+    if n >= 2 { sawTwo = true; lowStreak = 0 }
+    else if sawTwo {                                    // (b) render window closed
+        lowStreak += 1
+        if lowStreak >= 3 { break }                     // ~6s sustained -> reap the hung session
+    }
 }
 reap(A)
