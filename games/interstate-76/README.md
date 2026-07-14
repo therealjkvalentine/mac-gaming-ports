@@ -1,3 +1,7 @@
+> **MOVED:** Interstate '76 work now lives in its own repo —
+> **https://github.com/therealjkvalentine/i76-everywhere** (better organization + full docs).
+> This folder remains as history; new work happens there.
+
 # Interstate '76 (GOG Gold) - Apple Silicon
 
 Status: **Playable on the free stack** (Sikarugir Wine 10, wow64) — fullscreen-4:3 window,

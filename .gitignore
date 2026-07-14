@@ -22,3 +22,6 @@ mw5-save-backups/
 # local secrets (Steam Deck SSH etc.) - never publish
 .env
 **/.env
+games/interstate-76/smack-music-fix/SMACKW32.DLL
+# local backups made by the I76 tooling
+games/interstate-76/*.pre-*

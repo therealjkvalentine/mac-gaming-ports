@@ -72,8 +72,11 @@ nitrous is triggered through a **special** slot, not a "nitrous key."
 The only way out of the canyon is a ramp jump, and **jump distance is inversely tied to framerate**
 — above exactly 20 FPS the car falls too fast per frame and lands short (this is *the* infamous I76
 obstacle). Two things make it:
-1. **Cap to exactly 20 FPS** (Mac: DxWnd Timing → Limit + `50` ms/frame; Windows/Deck: dgVoodoo
-   `FPSLimit = 20`). See VERIFIED-FIXES.
+1. **Cap to ≤ 20 FPS** — lower = more jump distance, so a touch under 20 clears these most reliably.
+   **Mac default: DxWnd Timing → Limit ON + delay `52` ms ≈ 19.2 FPS** — this also clears the
+   *later-mission* bridge/ramp gaps, which are tuned tight for the era's exact-20 sim (`50` ms = 20
+   FPS is the reference). Windows/Deck: dgVoodoo `FPSLimit` 19–20. The GOG exe self-caps ~20.66, so
+   the DxWnd limiter only bites when set below that. See VERIFIED-FIXES.
 2. **Full acceleration down the hill + hit nitrous** (`6`/`7`/`8`, whichever slot) on the ramp.
 
 ## The 20-FPS rule (why the whole port caps at 20)

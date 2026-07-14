@@ -15,7 +15,7 @@ Working on the free stack (Sikarugir/Wine + D3DMetal; free, open-source tooling 
 | MechWarrior 5: Mercenaries | 784080 | Playable - D3DMetal, controller, all DLC, fully offline via Goldberg, cheats + LAN prepped | [games/mechwarrior-5-mercenaries](games/mechwarrior-5-mercenaries/) |
 | SpiderHeck | 1329500 | Playable - D3DMetal, controller, 4-player couch co-op, fully offline via Goldberg | [games/spiderheck](games/spiderheck/) |
 | Need for Speed: Most Wanted (2012) | 1262560 | Playable - D3DMetal, self-contained, no CrossOver; one-time EA prompt per launch (servers dead) | [games/need-for-speed-most-wanted-2012](games/need-for-speed-most-wanted-2012/) |
-| Interstate '76 (GOG, not Steam) | - | Playable - windowed via the exe's hidden `-gdi` mode, built-in 20 FPS physics limiter (the GOG exe ships the AiO patch); bring your own game files (OpenRA-style `game-data/`) | [games/interstate-76](games/interstate-76/) |
+| Interstate '76 (GOG, not Steam) | - | **Moved to its own repo: [i76-everywhere](https://github.com/therealjkvalentine/i76-everywhere)** (Mac + Steam Deck + Windows, save editor, reverse-engineered formats). [games/interstate-76](games/interstate-76/) stays as frozen history | [i76-everywhere](https://github.com/therealjkvalentine/i76-everywhere) |
 
 Candidates (want a portable Mac version; not built yet):
 

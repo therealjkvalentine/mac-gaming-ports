@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "i76-save-editor",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8476", "--directory", "games/interstate-76"],
+      "port": 8476
+    }
+  ]
+}

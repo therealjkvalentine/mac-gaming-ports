@@ -13,3 +13,9 @@ Expected contents:
 
 If you own the GOG copy you only need the zip (or just install fresh from the GOG offline
 installer into the wrapper — same result).
+
+## tools/ (preserved third-party downloads — gitignored)
+- `dgVoodoo2_78_2.zip` — the exact dgVoodoo build the Voodoo path needs (newer versions break under Wine); source: archive.org item `dgvoodoo2_78_2_202205`.
+- `cd-help-files/` — the CD's Windows `.HLP` help files + README.TXT (the only digital doc content on the disc; the full manual was printed / is a GOG PDF extra).
+- `dxwnd/` — a copy of the working DxWnd install used by the software-renderer app.
+These are re-fetchable via setup-dgvoodoo-cpl.sh / setup-dxwnd.sh; kept here as offline insurance.

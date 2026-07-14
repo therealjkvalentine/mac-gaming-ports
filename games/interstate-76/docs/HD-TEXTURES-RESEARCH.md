@@ -38,6 +38,26 @@ see "Ceilings" and "For future research".
   `vpit.cbk`) + `zdash106..606` (night, M16). Menu shell = loose 8-bit BMPs in `SP256/`
   (trivially editable). Loading screens = 640x480 PCX.
 
+## Observed: night-mission palette mismatch (2026-07-12, Mac software path)
+
+Installing the built pack on the Mac made **night missions (e.g. Mission 6 — the Spanner's Cafe
+start) come out color-shifted**, while every day world looked correct. Root cause is the
+VQM-vs-M16 palette difference above:
+
+- The pack ships **night only as software VQM** (`nightm.pak`/`nightm.pix`) — no Glide `night6.pak`.
+- **VQM is palette-indexed against the level's own 8-bit `.ACT`** (no per-tile palette). The pack's
+  night VQM was quantized against the wrong `.ACT`, so on the software renderer the indices resolve
+  to the wrong colors — *only* at night (day worlds use `tt0Nm.pak`, which matched, so they're fine).
+- Stock `ADDON/` shipped **no** night files, so this is entirely a pack artifact, not a game bug —
+  and it's the exact risk this doc's "night M16 not fully decoded" note warned about.
+
+**Fix (shipped):** exclude the night VQM from the Mac install so night falls back to the correct
+stock textures inside `I76.ZFS`; day worlds keep the HD upgrade. `setup-mac-hd-textures.sh` now
+stashes `nightm.pak`/`.pix` into `ADDON/.night-hd-disabled/` on install (reversible — `mv` them back
+to A/B). The real cure is to **re-quantize the night VQM against the night level's `.ACT`** (or ship
+night as M16 for the Glide path, where per-tile palettes remove the constraint) — a texture-lab job
+on the Windows box, not a Mac-side fix.
+
 ## The injection path: ADDON/ loose-file override
 
 The engine's virtual filesystem checks **loose files before the ZFS** - game dir specials

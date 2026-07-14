@@ -62,6 +62,17 @@ echo "$ADDONS" | while read -r addon; do
     cp -f "$PACK"/*.pak "$PACK"/*.pix "$addon"/ 2>/dev/null || true
     cp -f "$PACK"/*.cbk "$addon"/ 2>/dev/null || true
     cp -f "$PACK"/*.map "$PACK"/*.m16 "$addon"/ 2>/dev/null || true
+    # NIGHT VQM EXCLUSION: the pack ships night only as software VQM (nightm.pak/.pix),
+    # and VQM is palette-indexed against each level's own 8-bit .ACT - the pack's night
+    # texture was quantized against the wrong palette, so night missions (e.g. Mission 6)
+    # come out color-shifted while every day world is fine. Drop the night override so
+    # night falls back to the correct stock textures inside I76.ZFS. (Stashed, not deleted,
+    # so you can A/B it.) See docs/HD-TEXTURES-RESEARCH.md "night palette mismatch".
+    if [ -f "$addon/nightm.pak" ] || [ -f "$addon/nightm.pix" ]; then
+        mkdir -p "$addon/.night-hd-disabled"
+        mv -f "$addon"/nightm.pak "$addon"/nightm.pix "$addon/.night-hd-disabled"/ 2>/dev/null || true
+        echo "  (night VQM excluded - color-mismatch on the software renderer; stashed in ADDON/.night-hd-disabled)"
+    fi
     echo "installed -> $addon  (backup: $gamedir/ADDON.pre-hd)"
 done
 
